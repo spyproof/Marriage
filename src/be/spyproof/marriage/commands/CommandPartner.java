@@ -2,6 +2,7 @@ package be.spyproof.marriage.commands;
 
 import be.spyproof.marriage.Gender;
 import be.spyproof.marriage.Marriage;
+import be.spyproof.marriage.Messages;
 import be.spyproof.marriage.Status;
 import be.spyproof.marriage.annotations.Beta;
 import be.spyproof.marriage.annotations.Command;
@@ -35,7 +36,7 @@ public class CommandPartner
         else if (status.equals(Status.MARRIED_TO_RIGHT_HAND))
             Marriage.sendMessage(sender, "&eYou are married to your right hand");
         else
-            Marriage.sendMessage(sender, Marriage.getSettings().getString("message.not-married"));
+            Marriage.sendMessage(sender, Messages.notMarried);
     }
 
     @Beta
@@ -44,7 +45,7 @@ public class CommandPartner
     {
         if (!PlayerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))
         {
-            Marriage.sendMessage(sender, Marriage.getSettings().getString("message.not-married-to-player"));
+            Marriage.sendMessage(sender, Messages.notMarriedToPlayer);
             return;
         }
 
@@ -66,7 +67,7 @@ public class CommandPartner
     {
         if (!PlayerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))
         {
-            Marriage.sendMessage(sender, Marriage.getSettings().getString("message.not-married-to-player"));
+            Marriage.sendMessage(sender, Messages.notMarriedToPlayer);
             return;
         }
 
@@ -78,14 +79,13 @@ public class CommandPartner
         {
             Player partner = Marriage.getPlayer(PlayerManager.getPartner(sender.getName()));
             if (partner == null)
-                Marriage.sendMessage(sender, Marriage.getSettings().getString("not-online").replace("{player}", PlayerManager.getPartner(sender.getName())));
+                Marriage.sendMessage(sender, Messages.notOnline.replace("{player}", PlayerManager.getPartner(sender.getName())));
             else
             {
                 PlayerManager.setPartnerChat(sender.getName(), true);
                 Marriage.sendMessage(sender, "&dYou are now privately chatting with " + partner.getDisplayName());
             }
         }
-        //Marriage.sendMessage(sender, "&1Not implemented yet");
     }
 
     @Command(command = "partner", trigger = "tp", args = {}, playersOnly = true, permission = "marriage.player.partner.tp", desc = "Teleport to your partner", usage = "/partner tp")
@@ -93,7 +93,7 @@ public class CommandPartner
     {
         if (!PlayerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))
         {
-            Marriage.sendMessage(sender, Marriage.getSettings().getString("message.not-married-to-player"));
+            Marriage.sendMessage(sender, Messages.notMarriedToPlayer);
             return;
         }
 
@@ -101,7 +101,7 @@ public class CommandPartner
         Player partner = Marriage.getPlayer(partnerName);
         if (partner == null)
         {
-            Marriage.sendMessage(sender, Marriage.getSettings().getString("message.not-online").replace("{player}", partnerName));
+            Marriage.sendMessage(sender, Messages.notOnline.replace("{player}", partnerName));
             return;
         }
 
@@ -117,7 +117,7 @@ public class CommandPartner
     {
         if (!PlayerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))
         {
-            Marriage.sendMessage(sender, Marriage.getSettings().getString("message.not-married-to-player"));
+            Marriage.sendMessage(sender, Messages.notMarriedToPlayer);
             return;
         }
 
@@ -132,7 +132,7 @@ public class CommandPartner
     {
         if (!PlayerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))
         {
-            Marriage.sendMessage(sender, Marriage.getSettings().getString("message.not-married-to-player"));
+            Marriage.sendMessage(sender, Messages.notMarriedToPlayer);
             return;
         }
 
@@ -145,7 +145,7 @@ public class CommandPartner
     {
         if (!PlayerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))
         {
-            Marriage.sendMessage(sender, Marriage.getSettings().getString("message.not-married-to-player"));
+            Marriage.sendMessage(sender, Messages.notMarriedToPlayer);
             return;
         }
 
@@ -158,7 +158,7 @@ public class CommandPartner
     {
         if (!PlayerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))
         {
-            Marriage.sendMessage(sender, Marriage.getSettings().getString("message.not-married-to-player"));
+            Marriage.sendMessage(sender, Messages.notMarriedToPlayer);
             return;
         }
 

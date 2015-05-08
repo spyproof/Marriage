@@ -1,7 +1,6 @@
 package be.spyproof.marriage.commands;
 
 import be.spyproof.marriage.Marriage;
-import be.spyproof.marriage.annotations.Beta;
 import be.spyproof.marriage.annotations.Command;
 import be.spyproof.marriage.annotations.Default;
 import be.spyproof.marriage.datamanager.PlayerManager;
@@ -82,13 +81,14 @@ public class CommandAdmMarry
     @Command(command = "admmarry", trigger = "{debug}", args = {}, playersOnly = false, helpHidden = true)
     public void getDebug(CommandSender sender)
     {
+        //When enabled, show the player debug information
         if (!sender.isOp())
             return;
         Marriage.toggleDebugger(sender.getName());
     }
 
     @Command(command = "admmarry", trigger = "plugin", args = {}, playersOnly = false, permission = "marriage.admin.plugin", desc = "Get more info about the plugin", usage = "/admmarry plugin")
-    public void getVersion(CommandSender sender)
+    public void getPluginInfo(CommandSender sender)
     {
         PluginDescriptionFile description = Marriage.plugin.getDescription();
         Marriage.sendMessage(sender, "&eThe current version of " + Marriage.plugin.getName() + " is &6" + description.getVersion());

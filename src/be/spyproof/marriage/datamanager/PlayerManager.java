@@ -2,6 +2,7 @@ package be.spyproof.marriage.datamanager;
 
 import be.spyproof.marriage.Gender;
 import be.spyproof.marriage.Marriage;
+import be.spyproof.marriage.Messages;
 import be.spyproof.marriage.Status;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -29,6 +30,7 @@ public class PlayerManager
      * Trusts:      Global
      * Chat:        Not stored
      * Last seen:   Local
+     * socialspy:   Local or permission?
      *
      *
      * @ Partner file
@@ -243,7 +245,7 @@ public class PlayerManager
         Long time = localStorage.getLastOnline(name);
 
         if (time == 0)
-            throw new IllegalArgumentException(Marriage.getSettings().getString("not-online").replace("{player}", name));
+            throw new IllegalArgumentException(Messages.notOnline.replace("{player}", name));
 
         return time;
     }

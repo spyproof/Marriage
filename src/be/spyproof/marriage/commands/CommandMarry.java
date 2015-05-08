@@ -2,6 +2,7 @@ package be.spyproof.marriage.commands;
 
 import be.spyproof.marriage.Gender;
 import be.spyproof.marriage.Marriage;
+import be.spyproof.marriage.Messages;
 import be.spyproof.marriage.Status;
 import be.spyproof.marriage.annotations.Command;
 import be.spyproof.marriage.datamanager.PlayerManager;
@@ -41,7 +42,7 @@ public class CommandMarry
             this.offers.remove(sender.getName());
 
         }catch (IllegalArgumentException e){
-            Marriage.sendMessage(sender, Marriage.getSettings().getString("message.no-proposal"));
+            Marriage.sendMessage(sender, Messages.noProposal);
         }
     }
 
@@ -51,7 +52,7 @@ public class CommandMarry
         //TODO add a timer
         if (PlayerManager.isMarried(sender.getName()))
         {
-            Marriage.sendMessage(sender, Marriage.getSettings().getString("message.already-married"));
+            Marriage.sendMessage(sender, Messages.alreadyMarried);
             return;
         }
 
@@ -60,7 +61,7 @@ public class CommandMarry
 
         if (PlayerManager.isMarried(newPartner))
         {
-            Marriage.sendMessage(sender, Marriage.getSettings().getString("message.already-married-other").replace("{player}", newPartner));
+            Marriage.sendMessage(sender, Messages.alreadyMarriedOther.replace("{player}", newPartner));
             return;
         }
 
@@ -75,7 +76,7 @@ public class CommandMarry
 
 
 
-            String broadcast = Marriage.getSettings().getString("message.broadcast").replace("{prefix}", Marriage.getSettings().getString("message.prefix")).replace("{player1}", sender.getName()).replace("{player2}", partner.getDisplayName());
+            String broadcast = Messages.broadcast.replace("{prefix}", Messages.prefix).replace("{player1}", sender.getName()).replace("{player2}", partner.getDisplayName());
             Bukkit.broadcastMessage(ChatColor.translateAlternateColorCodes('&', broadcast));
 
             Marriage.sendMessage(sender, "&eUse &6&l/partner&e for your new perks!");
@@ -83,7 +84,7 @@ public class CommandMarry
 
             this.offers.remove(sender.getName());
         }catch (IllegalArgumentException e){
-            Marriage.sendMessage(sender, Marriage.getSettings().getString("message.no-proposal"));
+            Marriage.sendMessage(sender, Messages.noProposal);
         }
     }
 
@@ -92,14 +93,14 @@ public class CommandMarry
     {
         if (PlayerManager.isMarried(sender.getName()))
         {
-            Marriage.sendMessage(sender, Marriage.getSettings().getString("message.already-married"));
+            Marriage.sendMessage(sender, Messages.alreadyMarried);
             return;
         }
 
         PlayerManager.setStatus(sender.getName(), Status.MARRIED_TO_LEFT_HAND);
 
-        String broadcast = Marriage.getSettings().getString("message.broadcast").replace("{prefix}", Marriage
-                .getSettings().getString("message.prefix")).replace("{player1}", sender.getName()).replace("{player2}", "its left hand");
+        String broadcast = Messages.broadcast.replace("{prefix}", Messages.prefix).replace("{player1}", sender.getName())
+                .replace("{player2}", "its left hand");
         Bukkit.broadcastMessage(ChatColor.translateAlternateColorCodes('&', broadcast));
     }
 
@@ -108,14 +109,14 @@ public class CommandMarry
     {
         if (PlayerManager.isMarried(sender.getName()))
         {
-            Marriage.sendMessage(sender, Marriage.getSettings().getString("message.already-married"));
+            Marriage.sendMessage(sender, Messages.alreadyMarried);
             return;
         }
 
         PlayerManager.setStatus(sender.getName(), Status.MARRIED_TO_RIGHT_HAND);
 
-        String broadcast = Marriage.getSettings().getString("message.broadcast").replace("{prefix}", Marriage
-                .getSettings().getString("message.prefix")).replace("{player1}", sender.getName()).replace("{player2}", "its right hand");
+        String broadcast = Messages.broadcast.replace("{prefix}", Messages.prefix).replace("{player1}", sender.getName())
+                .replace("{player2}", "its right hand");
         Bukkit.broadcastMessage(ChatColor.translateAlternateColorCodes('&', broadcast));
 
     }
@@ -125,7 +126,7 @@ public class CommandMarry
     {
         if (PlayerManager.isMarried(sender.getName()))
         {
-            Marriage.sendMessage(sender, Marriage.getSettings().getString("message.already-married"));
+            Marriage.sendMessage(sender, Messages.alreadyMarried);
             return;
         }
 
@@ -133,7 +134,7 @@ public class CommandMarry
         //TODO wtf happens here?
         if (receiver == null)
         {
-            Marriage.sendMessage(sender, Marriage.getSettings().getString("message.already-married-other").replace("{player}", receiverName));
+            Marriage.sendMessage(sender, Messages.alreadyMarriedOther.replace("{player}", receiverName));
             return;
         }
 
@@ -168,7 +169,7 @@ public class CommandMarry
                 Marriage.sendMessage(sender, ChatColor.RED + e.getMessage());
             }
         }else{
-            Marriage.sendMessage(sender, Marriage.getSettings().getString("message.not-married"));
+            Marriage.sendMessage(sender, Messages.notMarried);
         }
     }
 
@@ -221,14 +222,14 @@ public class CommandMarry
             PlayerManager.setPartner(partner, "");
             PlayerManager.setTrustsPartner(partner, false);
             PlayerManager.removeHome(partner);
-            Marriage.sendMessage(partner, Marriage.getSettings().getString("message.divorce"));
+            Marriage.sendMessage(partner, Messages.divorce);
         }
 
         PlayerManager.setStatus(player, Status.DIVORCED);
         PlayerManager.setPartner(player, "");
         PlayerManager.setTrustsPartner(player, false);
         PlayerManager.removeHome(player);
-        Marriage.sendMessage(player, Marriage.getSettings().getString("message.divorce"));
+        Marriage.sendMessage(player, Messages.divorce);
 
         return true;
     }

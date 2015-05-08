@@ -2,6 +2,7 @@ package be.spyproof.marriage.commands;
 
 import be.spyproof.marriage.Gender;
 import be.spyproof.marriage.Marriage;
+import be.spyproof.marriage.Messages;
 import be.spyproof.marriage.annotations.Beta;
 import be.spyproof.marriage.annotations.Command;
 import be.spyproof.marriage.annotations.Default;
@@ -29,6 +30,7 @@ public class CommandHandler implements TabCompleter
         return commandHandler;
     }
 
+    //Register the command handling
     public void registerCommands(Class commandClass)
     {
         try
@@ -41,10 +43,13 @@ public class CommandHandler implements TabCompleter
                     String command = m.getAnnotation(Command.class).command();
                     if (!addedCommands.contains(command))
                     {
+                        //Register tab completion for the command
                         addedCommands.add(command);
                         Marriage.plugin.getCommand(command).setTabCompleter(this);
                     }
+                    //Link the @Command with the method
                     commandMap.put(m.getAnnotation(Command.class), m);
+                    //Link the method with the class
                     instances.put(m, o);
                 }
             }
@@ -60,17 +65,19 @@ public class CommandHandler implements TabCompleter
         List<String> help = getHelp(cmd, sender);
         if (help.size() == 0)
         {
-            Marriage.sendMessage(sender, Marriage.getSettings().getString("message.no-permission"));
+            Marriage.sendMessage(sender, Messages.noPermission);
             return;
         }
 
         Marriage.sendMessage(sender, "&b&l====> &2&l" + Marriage.plugin.getName() + "&b&l <====");
 
+        //Show 8 commands per help page
         double helpPerPage = 8.0;
         page = page - 1;
         if (page < 0)
         page = 0;
 
+        //Devide the help section into multiple pages
         for (int i = (int) (page*helpPerPage); i < ((int) ((page+1)*helpPerPage) < help.size() ? (int) ((page+1)*helpPerPage) : help.size()); i++)
             Marriage.sendMessage(sender, help.get(i));
         if (((int) ((page+1)*helpPerPage) < help.size()))
@@ -81,16 +88,19 @@ public class CommandHandler implements TabCompleter
     {
         List<String> help = new ArrayList<String>();
         for (Command cmdInfo: commandMap.keySet())
+            //Only show help when: the command name is right & command is not hidden from the help menu & the sender has the permission
             if (cmd.equalsIgnoreCase(cmdInfo.command()) && !cmdInfo.helpHidden() && hasPerm(sender, cmdInfo.permission()))
+                //Only show the help menu if the sender is a player & if the command is player only
                 if (!(sender instanceof Player) && cmdInfo.playersOnly())
                 {
 
                 }else
                 {
+                    //When the method has @Beta, only add it to the help list if it is enabled in the config
                     boolean addHelp = false;
                     if (commandMap.get(cmdInfo).isAnnotationPresent(Beta.class))
                     {
-                        if (Marriage.plugin.getConfig().getBoolean("settings.beta-testing"))
+                        if (Marriage.plugin.getConfig().getBoolean("beta-testing"))
                             addHelp = true;
                     }else
                         addHelp = true;
@@ -98,48 +108,59 @@ public class CommandHandler implements TabCompleter
                     if (addHelp)
                         help.add("&b" + cmdInfo.usage() + "&r -" + (commandMap.get(cmdInfo).isAnnotationPresent(Beta.class) ? " &r[&2&o&lBeta&f]" : "") + " &a" + cmdInfo.desc().replaceAll("[{}]", ""));
                 }
+        //Sort the help menu alphabetically
         Collections.sort(help);
         return help;
     }
 
     public void callCommand(String command, String trigger, CommandSender sender, String[] args)
     {
+        //arg = command + all arguments, only used for debugging
         String arg = command + " " + trigger;
         if (args != null)
             for (String s : args)
                 arg += " " + s;
         Marriage.sendDebugInfo(sender.getName() + " invoked the command\n&b/" + arg);
 
+        //Find the method that matches the command
         Method method = getCommandMethod(command, trigger);
         if (method != null)
         {
-            Command cmdInfo = getCommandInfo(method);
+            Command cmdInfo = method.getAnnotation(Command.class);
+            //If the method has the @Command
             if (cmdInfo != null)
             {
+                //if the commands match "/command1" ?= "/command2"
                 if (cmdInfo.command().equalsIgnoreCase(command))
                 {
-                    //Fill defaults based on @Default
+                    //Fill defaults based on @Default (does not overwrite)
                     args = fillDefaults(method, args, sender.getName());
+                    //Check if the argument amount are the same
                     if (args.length == cmdInfo.args().length)
                     {
+                        //Check if its player only
                         if (!(sender instanceof Player) && cmdInfo.playersOnly())
                         {
-                            Marriage.sendMessage(sender, Marriage.getSettings().getString("message.player-only"));
+                            Marriage.sendMessage(sender, Messages.playerOnly);
                             Marriage.sendDebugInfo(sender.getName() + " is not a player, the command is only for players");
                             return;
                         }else {
+                            //Check for prmissions
                             if (hasPerm(sender, cmdInfo.permission()))
                             {
                                 try {
-                                    if (method.isAnnotationPresent(Beta.class) && Marriage.plugin.getConfig().getBoolean("settings.beta-testing"))
+                                    //Check if the command is in beta (has @beta)
+                                    if (method.isAnnotationPresent(Beta.class) && Marriage.plugin.getConfig().getBoolean("beta-testing"))
                                         Marriage.sendMessage(sender, "&b&oThis command is in testing fase! Please report all bugs!");
-                                    else if (method.isAnnotationPresent(Beta.class) && !Marriage.plugin.getConfig().getBoolean("settings.beta-testing"))
+                                    else if (method.isAnnotationPresent(Beta.class) && !Marriage.plugin.getConfig().getBoolean("beta-testing"))
                                     {
                                         Marriage.sendMessage(sender, "&cEnable beta testing to get access to this " +
                                                 "command");
                                         Marriage.sendDebugInfo("Beta testing access only");
                                         return;
                                     }
+
+                                    //Try to execute the command
                                     if (args.length == 0)
                                         method.invoke(instances.get(method), sender);
                                     else if (args.length == 1)
@@ -154,7 +175,7 @@ public class CommandHandler implements TabCompleter
                                 }
                                 return;
                             }else{
-                                Marriage.sendMessage(sender, Marriage.getSettings().getString("message.no-permission"));
+                                Marriage.sendMessage(sender, Messages.noPermission);
                                 Marriage.sendDebugInfo("&c" + sender.getName() + " does not have the permission:\n&o" + cmdInfo.permission());
                                 return;
                             }
@@ -164,6 +185,8 @@ public class CommandHandler implements TabCompleter
             }
         }
 
+        //If no correct command usage is found, show the default help page
+        //If the command has a trigger "help", it will override the default help page
         if (trigger.equalsIgnoreCase("help"))
         {
             int page = 1;
@@ -183,8 +206,10 @@ public class CommandHandler implements TabCompleter
     @Override
     public List<String> onTabComplete(CommandSender commandSender, org.bukkit.command.Command command, String s, String[] args)
     {
-        //TODO implement the help menu
+        //Will store the possible tab completions
         List<String> tabComplete = new ArrayList<String>();
+
+        //Debug info
         String com = command.getName();
         for (String string : args)
             com += " " + string;
@@ -193,6 +218,7 @@ public class CommandHandler implements TabCompleter
         if (args.length == 0)
             return null;
 
+        //If only a trigger is found
         if (args.length == 1)
         {
             for (Command cmdInfo : commandMap.keySet())
@@ -209,6 +235,7 @@ public class CommandHandler implements TabCompleter
                 tabComplete.add("help");
         }
 
+        //If a trigger and extra arguments are found
         if (args.length > 1)
         {
             //For each possible command
@@ -220,14 +247,16 @@ public class CommandHandler implements TabCompleter
                     //Check permission and if its the same command
                     if (cmdInfo.command().equalsIgnoreCase(command.getName()) && hasPerm(commandSender, cmdInfo.permission()))
                     {
+                        //cmdArgs = trigger + arguments behind the trigger
                         String[] cmdArgs = new String[cmdInfo.args().length+1];
                         System.arraycopy(cmdInfo.args(), 0, cmdArgs, 1, cmdArgs.length-1);
                         cmdArgs[0] = cmdInfo.trigger();
 
                         boolean argsMatch = true;
-                        //Check of the args match, except for the last
+                        //Check of the args match, except for the last (last needs to be tab completed)
                         for (int i = 0; i < args.length-1; i++)
                         {
+                            //Special tabs example: {gender} will return {"male", "female", "HIDDEN"}
                             if (isSpecial(cmdArgs[i]))
                             {
                                 Marriage.sendDebugInfo("Found a special tab: " + cmdArgs[i]);
@@ -259,6 +288,7 @@ public class CommandHandler implements TabCompleter
             }
         }
 
+        //Debug info
         if (tabComplete.size() == 0)
         {
             tabComplete = null;
@@ -279,6 +309,7 @@ public class CommandHandler implements TabCompleter
      * Private stuff
      */
 
+    //Fills the missing arguments if @Default(values) is peresnt
     private String[] fillDefaults(Method method, String[] args, String name)
     {
         if (method.isAnnotationPresent(Default.class) && method.isAnnotationPresent(Command.class))
@@ -302,12 +333,14 @@ public class CommandHandler implements TabCompleter
         return args;
     }
 
+    //Check for player permission
     private boolean hasPerm(CommandSender sender, String perm)
     {
         if (sender.hasPermission(perm) || perm.equalsIgnoreCase("none") || sender.isOp())
             return true;
         else
         {
+            //Check for wildcards -> perm needed = a.perm.1 -> player has a.perm.* -> return true
             boolean go = perm.contains(".");
             while (go)
             {
@@ -329,6 +362,7 @@ public class CommandHandler implements TabCompleter
 
     private List<String> specialTabs(String arg)
     {
+        //Replace the special tabs
         List<String> tabs = new ArrayList<String>();
         if (arg.equalsIgnoreCase("{player}"))
             return null; // Will complete with player names
@@ -342,6 +376,7 @@ public class CommandHandler implements TabCompleter
         return null;
     }
 
+    //Merge 2 lists
     private List<String> addToList(List<String> original, List<String> extra)
     {
         if (extra == null)
@@ -357,10 +392,5 @@ public class CommandHandler implements TabCompleter
             if ((cmdInfo.trigger().replaceAll("[{}]", "")).equalsIgnoreCase(trigger) && cmdInfo.command().equalsIgnoreCase(command))
                 return commandMap.get(cmdInfo);
         return null;
-    }
-
-    private Command getCommandInfo(Method method)
-    {
-        return method.getAnnotation(Command.class);
     }
 }

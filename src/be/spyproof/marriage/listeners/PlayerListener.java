@@ -1,6 +1,8 @@
 package be.spyproof.marriage.listeners;
 
 import be.spyproof.marriage.Marriage;
+import be.spyproof.marriage.Messages;
+import be.spyproof.marriage.Status;
 import be.spyproof.marriage.datamanager.PlayerManager;
 import com.dthielke.herochat.ChannelChatEvent;
 import org.bukkit.ChatColor;
@@ -21,7 +23,12 @@ public class PlayerListener implements Listener
     public void onPlayerJoin(PlayerJoinEvent e)
     {
         PlayerManager.loadPlayer(e.getPlayer().getName());
-        //TODO notify partner
+        if (PlayerManager.getStatus(e.getPlayer().getName()).equals(Status.MARRIED_TO_PERSON))
+        {
+            Player partner = Marriage.getPlayer(PlayerManager.getPartner(e.getPlayer().getName()));
+            if (partner != null)
+                Marriage.sendMessage(partner, Messages.partnerJoined.replace("{player}", e.getPlayer().getDisplayName()));
+        }
     }
 
     @EventHandler
@@ -60,21 +67,12 @@ public class PlayerListener implements Listener
             Player partner = Marriage.getPlayer(PlayerManager.getPartner(e.getPlayer().getName()));
             if (partner == null)
             {
-                Marriage.sendMessage(e.getPlayer(), Marriage.getSettings().getString("not-online").replace("{player}", PlayerManager.getPartner(e.getPlayer().getName())));
+                Marriage.sendMessage(e.getPlayer(), Messages.notOnline.replace("{player}", PlayerManager.getPartner(e.getPlayer().getName())));
                 Marriage.sendMessage(e.getPlayer(), "&cReturning back to normal chat");
                 PlayerManager.setPartnerChat(e.getPlayer().getName(), false);
             }else
             {
-                if (e.getPlayer().getDisplayName() != null)
-                    Marriage.sendDebugInfo(e.getPlayer().getName() + " = " + e.getPlayer().getDisplayName());
-                if (partner.getDisplayName() != null)
-                    Marriage.sendDebugInfo(partner.getName() + " = " + partner.getDisplayName());
-                if (e.getMessage() != null)
-                    Marriage.sendDebugInfo("message = " + e.getMessage());
-                if (Marriage.getSettings().getString("private-message") != null)
-                    Marriage.sendDebugInfo("Format = " + Marriage.getSettings().getString("message.private-message"));
-
-                String message = Marriage.getSettings().getString("message.private-message").replace("{sender}", e.getPlayer().getDisplayName())
+                String message = Messages.privateMessage.replace("{sender}", e.getPlayer().getDisplayName())
                         .replace("{receiver}", partner.getDisplayName()).replace("{message}", ChatColor.stripColor(e.getMessage()));
                 Marriage.sendMessage(e.getPlayer(), message);
                 Marriage.sendMessage(partner, message);
@@ -85,7 +83,13 @@ public class PlayerListener implements Listener
     private void playerDisconnected(Player player)
     {
         PlayerManager.unloadPlayer(player.getName());
-        //TODO notify partner
+
+        if (PlayerManager.getStatus(player.getName()).equals(Status.MARRIED_TO_PERSON))
+        {
+            Player partner = Marriage.getPlayer(PlayerManager.getPartner(player.getName()));
+            if (partner != null)
+                Marriage.sendMessage(partner, Messages.partnerDC.replace("{player}", player.getDisplayName()));
+        }
 
         PlayerManager.setLastOnline(player.getName(), System.currentTimeMillis());
     }

@@ -13,11 +13,9 @@ import net.milkbowl.vault.economy.Economy;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -61,12 +59,6 @@ public class Marriage extends JavaPlugin
         }
     }
 
-    public static FileConfiguration getSettings()
-    {
-        return plugin.getConfig();
-    }
-
-    @Nullable
     public static Player getPlayer(String player)
     {
         return plugin.getServer().getPlayer(player);
@@ -74,10 +66,7 @@ public class Marriage extends JavaPlugin
 
     public static void sendMessage(CommandSender sender, String message)
     {
-        message = message.replace("\\n", "\n").replace("{prefix}", Marriage.getSettings().getString("message.prefix"));
-
-        /*if (PlayerManager.getGender(sender.getName()).equals(Gender.FEMALE))
-            message = message.replaceAll("\bhim\b", "her").replaceAll("\bhis\b", "her").replaceAll("\bhe\b", "she");*/
+        message = message.replace("\\n", "\n").replace("{prefix}", Messages.prefix);
 
         sender.sendMessage(ChatColor.translateAlternateColorCodes('&', message));
     }
