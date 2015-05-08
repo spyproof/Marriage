@@ -1,4 +1,4 @@
-package be.spyproof.marriage.commands.handlers;
+package be.spyproof.marriage.annotations;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -13,7 +13,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Command
 {
-    //Hide a tab completion with "{}" -> "{whatever}" //TODO redo hiding
+    //TODO {} = special / - = hiding / ? = optional
     String command();
 
     String trigger();
@@ -29,5 +29,4 @@ public @interface Command
     String usage() default "";
 
     boolean helpHidden() default false;
-
 }

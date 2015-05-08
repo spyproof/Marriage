@@ -1,5 +1,6 @@
 settings:
   cooldown: 5 # minutes
+  beta-testing: false
 MySQL:
   host: localhost
   port: 3306
@@ -9,11 +10,13 @@ MySQL:
 message:
   prefix: '&b&l[&2&lMarriage&b&l]'
   broadcast: '{prefix} &5{player1}&d is now married to &5{player2}' # can use {prefix}
+  private-message: '&5{sender}&5 -> &5{receiver}&5:&d {message}' # can use {prefix}, {sender}, {receiver}
   player-only: '&cThis command can only be used by players' # can use {prefix}
   already-married: '&cYou are already married!\nTry to talk to each other before using /marry divorce' # can use {prefix}
   already-married-other: '&c{player} is already married!' # can use {player} and {perfix}
   not-married: '&cYou are not married!' # can use {prefix}
+  not-married-to-player: '&cYou need to be married to another person to use this!' # can use {prefix}
   not-online: '&c{player}&c is not online' # can use {player} and {perfix}
   no-proposal: '&cNo one has send a proposal to you yet' # can use {prefix}
-  no-permission: '&cYou do not have permission to use this command\n{perm}' # can use {perm} and {perfix}
+  no-permission: '&cYou do not have permission to use this command' # can use {perfix}
   divorce: '&5You are now divorced' # can use {prefix}

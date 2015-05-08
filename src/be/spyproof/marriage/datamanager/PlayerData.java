@@ -14,14 +14,24 @@ public class PlayerData
     private Status status;
     private String partner;
     private boolean trustsPartner;
+    private boolean homeSet;
+    private boolean partnerChat;
+    private int homeX;
+    private int homeY;
+    private int homeZ;
 
-    public PlayerData(String name, Gender gender, Status status, String partner, boolean trustsPartner)
+    public PlayerData(String name, Gender gender, Status status, String partner, boolean trustsPartner, boolean homeSet, int homeX, int homeY, int homeZ)
     {
         this.name = name.toLowerCase();
         this.gender = gender;
         this.status = status;
         this.partner = partner;
         this.trustsPartner = trustsPartner;
+        this.partnerChat = false;
+        this.homeSet = homeSet;
+        this.homeX = homeX;
+        this.homeY = homeY;
+        this.homeZ = homeZ;
     }
 
     /**
@@ -53,6 +63,31 @@ public class PlayerData
         return trustsPartner;
     }
 
+    public boolean isPartnerChatOn()
+    {
+        return this.partnerChat;
+    }
+
+    public boolean isHomeSet()
+    {
+        return homeSet;
+    }
+
+    public int getHomeX()
+    {
+        return homeX;
+    }
+
+    public int getHomeY()
+    {
+        return homeY;
+    }
+
+    public int getHomeZ()
+    {
+        return homeZ;
+    }
+
     /**
      * Setters
      */
@@ -75,5 +110,30 @@ public class PlayerData
     public void setTrustsPartner(boolean trustsPartner)
     {
         this.trustsPartner = trustsPartner;
+    }
+
+    public void setPartnerChat(boolean partnerChat)
+    {
+        this.partnerChat = partnerChat;
+    }
+
+    public void setHomeSet(boolean homeSet)
+    {
+        this.homeSet = homeSet;
+    }
+
+    public void setHomeX(int homeX)
+    {
+        this.homeX = homeX;
+    }
+
+    public void setHomeY(int homeY)
+    {
+        this.homeY = homeY;
+    }
+
+    public void setHomeZ(int homeZ)
+    {
+        this.homeZ = homeZ;
     }
 }

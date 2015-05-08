@@ -1,13 +1,11 @@
 name: Marriage
-version: 0.1-ALPHA
+version: 0.2-BETA
 description: Allows players to marry
-author: spyproof
+author: TPNils
+website: https://github.com/spyproof
 main: be.spyproof.marriage.Marriage
 depend: [Vault, Herochat]
 commands:
-  test:
-    description: test
-    permission: marriage.admin.test
   marry:
     description: Marry commands
     alliases: Marriage
@@ -16,27 +14,3 @@ commands:
   partner:
     description: Marriage perks
 
-Permissions:
-  marriage.*:
-    children:
-      marriage.player.*: true
-      marriage.admin.*: true
-      marriage.perks.*: true
-  marriage.player.*:
-    childeren:
-      marriage.player.marry.*: true
-      marriage.player.divorce: true
-      marriage.player.partner: true
-  marriage.player.marry.*:
-      marriage.player.marry.self: true
-      marriage.player.marry.other: true
-  marriage.admin.*:
-    children:
-      marriage.admin.info: true
-      marriage.admin.remove: true
-      marriage.admin.reload: true
-      marriage.admin.save: true
-  marriage.perks.*:
-    children:
-      marriage.perks.bypasscooldown: true
-      marriage.perks.bypasscosts: true

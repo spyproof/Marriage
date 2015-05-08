@@ -1,9 +1,13 @@
 package be.spyproof.marriage.commands;
 
-import be.spyproof.marriage.commands.handlers.Command;
+import be.spyproof.marriage.Marriage;
+import be.spyproof.marriage.annotations.Beta;
+import be.spyproof.marriage.annotations.Command;
+import be.spyproof.marriage.annotations.Default;
 import be.spyproof.marriage.datamanager.PlayerManager;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.plugin.PluginDescriptionFile;
 
 /**
  * Created by Nils on 3/04/2015.
@@ -25,15 +29,15 @@ public class CommandAdmMarry
         sender.sendMessage(ChatColor.DARK_GREEN + "Saved " + PlayerManager.getLoadedPlayers().size() + " players");
     }
 
-    @Command(command = "admmarry", trigger = "remove", args = {"player"}, playersOnly = false, permission = "marriage.admin.remove", desc = "Reset a player", usage = "/admmarry remove <player>")
+    @Command(command = "admmarry", trigger = "remove", args = {"{player}"}, playersOnly = false, permission = "marriage.admin.remove", desc = "Reset a player", usage = "/admmarry remove <player>")
     public void removePlayer(CommandSender sender, String player)
     {
         try{
             try {
                 String partner = PlayerManager.getPartner(player);
 
-                /*TODO if(!partner.equals("") && !partner.isEmpty())
-                    this.plugin.getCommandDivorce().divorcePlayer(partner);*/
+                if(!partner.equals("") && !partner.isEmpty())
+                    CommandMarry.divorcePlayer(partner);
             } catch (IllegalArgumentException ignored) {}
 
             PlayerManager.resetPlayer(player);
@@ -43,7 +47,8 @@ public class CommandAdmMarry
         }
     }
 
-    @Command(command = "admmarry", trigger = "info", args = {"player"}, playersOnly = false, permission = "marriage.admin.info", desc = "Get the player information", usage = "/admmarry info <player>")
+    @Default({"{player}"})
+    @Command(command = "admmarry", trigger = "info", args = {"{player}"}, playersOnly = false, permission = "marriage.admin.info", desc = "Get the player information", usage = "/admmarry info <player>")
     public void getPlayerInfo(CommandSender sender, String player)
     {
         String status, gender, partner;
@@ -53,24 +58,24 @@ public class CommandAdmMarry
             status = PlayerManager.getStatus(player).toString();
             gender = PlayerManager.getGender(player).toString();
             partner = PlayerManager.getPartner(player);
-            //isHomeSet = this.plugin.getPlayerManager().getIsHomeSet(player);
+            isHomeSet = PlayerManager.isHomeSet(player);
             trustsPartner = PlayerManager.trustsPartner(player);
-            //x = this.plugin.getPlayerManager().getHomeX(player);
-            //y = this.plugin.getPlayerManager().getHomeY(player);
-            //z = this.plugin.getPlayerManager().getHomeZ(player);
+            x = PlayerManager.getHomeX(player);
+            y = PlayerManager.getHomeY(player);
+            z = PlayerManager.getHomeZ(player);
 
-            sender.sendMessage(ChatColor.YELLOW + "------------" + ChatColor.GOLD + ChatColor.BOLD + player + "------------");
+            Marriage.sendMessage(sender, "&e------------&6&l" + player + "&e------------");
 
-            sender.sendMessage(ChatColor.GOLD + "Gender: " + ChatColor.YELLOW + gender);
-            sender.sendMessage(ChatColor.GOLD + "Status: " + ChatColor.YELLOW + status);
-            sender.sendMessage(ChatColor.GOLD + "Partner: " + ChatColor.YELLOW + partner);
-            sender.sendMessage(ChatColor.GOLD + "Allow open inv: " + ChatColor.YELLOW + trustsPartner);
-                        /*if(isHomeSet)
-                            sender.sendMessage(ChatColor.GOLD + "Home: " + ChatColor.YELLOW + "X:" + x + " | Y:" + y + " | Z:" + z);
-                        else
-                            sender.sendMessage(ChatColor.GOLD + "Home: " + ChatColor.YELLOW + "Home is not set");*/
+            Marriage.sendMessage(sender, "&6Gender: &e" + gender);
+            Marriage.sendMessage(sender, "&6Status: &e" + status);
+            Marriage.sendMessage(sender, "&6Partner: &e" + partner);
+            Marriage.sendMessage(sender, "&6Allow open inv: " + ChatColor.YELLOW + trustsPartner);
+            if(isHomeSet)
+                Marriage.sendMessage(sender, "&6Home: &eX:" + x + "  Y:" + y + "  Z:" + z);
+            else
+                Marriage.sendMessage(sender, "&6Home: &eHome is not set");
         }catch (IllegalArgumentException e){
-            sender.sendMessage(ChatColor.RED + e.getMessage());
+            Marriage.sendMessage(sender, ChatColor.RED + e.getMessage());
         }
     }
 
@@ -79,11 +84,26 @@ public class CommandAdmMarry
     {
         if (!sender.isOp())
             return;
-        sender.sendMessage(ChatColor.DARK_GREEN + "Loaded players: ");
-        for (int i = 0; i < PlayerManager.getLoadedPlayers().size(); i++)
-            sender.sendMessage(ChatColor.YELLOW + " - " + PlayerManager.getLoadedPlayers().get(i).getName());
+        Marriage.toggleDebugger(sender.getName());
+    }
 
+    @Command(command = "admmarry", trigger = "plugin", args = {}, playersOnly = false, permission = "marriage.admin.plugin", desc = "Get more info about the plugin", usage = "/admmarry plugin")
+    public void getVersion(CommandSender sender)
+    {
+        PluginDescriptionFile description = Marriage.plugin.getDescription();
+        Marriage.sendMessage(sender, "&eThe current version of " + Marriage.plugin.getName() + " is &6" + description.getVersion());
+        if (description.getAuthors() != null)
+            if (description.getAuthors().size() != 0)
+            {
+                String authors = "&eAuthors:&6";
+                for (String s : description.getAuthors())
+                    authors += " " + s;
+                Marriage.sendMessage(sender, authors);
+            }
+        if (description.getWebsite() != null)
+            Marriage.sendMessage(sender, "&eThe developer's website is &6&n" + description.getWebsite());
     }
 
     //TODO clear cooldown?
+
 }

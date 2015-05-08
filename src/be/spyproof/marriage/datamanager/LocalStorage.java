@@ -20,12 +20,17 @@ public class LocalStorage
     public LocalStorage(File file, String fileName)
     {
         this.playerConfigFile = new File(file, fileName);
-        this.config = YamlConfiguration.loadConfiguration(this.playerConfigFile);
+        loadConfig();
     }
 
     /**
      * Saving
      */
+
+    public void loadConfig()
+    {
+        this.config = YamlConfiguration.loadConfiguration(this.playerConfigFile);
+    }
 
     public void saveConfig()
     {
@@ -80,6 +85,36 @@ public class LocalStorage
         return this.config.getBoolean(name + ".trusts partner");
     }
 
+    public boolean isHomeSet(String name)
+    {
+        name = name.toLowerCase();
+        return this.config.getBoolean(name + ".home.is set");
+    }
+
+    public int getHomeX(String name)
+    {
+        name = name.toLowerCase();
+        return this.config.getInt(name + ".home.x");
+    }
+
+    public int getHomeY(String name)
+    {
+        name = name.toLowerCase();
+        return this.config.getInt(name + ".home.y");
+    }
+
+    public int getHomeZ(String name)
+    {
+        name = name.toLowerCase();
+        return this.config.getInt(name + ".home.z");
+    }
+
+    public long getLastOnline(String name)
+    {
+        name = name.toLowerCase();
+        return this.config.getLong(name + ".last seen");
+    }
+
     /**
      * Edit player data
      */
@@ -112,5 +147,35 @@ public class LocalStorage
     {
         name = name.toLowerCase();
         this.config.set(name + ".trusts partner", trustsPartner);
+    }
+
+    public void setHomeSet(String name, boolean homeSet)
+    {
+        name = name.toLowerCase();
+        this.config.set(name + ".home.is set", homeSet);
+    }
+
+    public void setHomeX(String name, int x)
+    {
+        name = name.toLowerCase();
+        this.config.set(name + ".home.x", x);
+    }
+
+    public void setHomeY(String name, int y)
+    {
+        name = name.toLowerCase();
+        this.config.set(name + ".home.y", y);
+    }
+
+    public void setHomeZ(String name, int z)
+    {
+        name = name.toLowerCase();
+        this.config.set(name + ".home.z", z);
+    }
+
+    public void setLastOnline(String name, long l)
+    {
+        name = name.toLowerCase();
+        this.config.set(name + ".last seen", l);
     }
 }

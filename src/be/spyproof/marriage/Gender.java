@@ -5,8 +5,8 @@ package be.spyproof.marriage;
  */
 public enum Gender
 {
-    MALE("man"),
-    FEMALE("woman"),
+    MALE("male"),
+    FEMALE("female"),
     HIDDEN ("HIDDEN");
 
     private final String name;
@@ -16,7 +16,7 @@ public enum Gender
     }
 
     public boolean equalsName(String otherName){
-        return name.equals(otherName);
+        return name.equalsIgnoreCase(otherName);
     }
 
     public String toString(){
