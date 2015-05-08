@@ -48,7 +48,16 @@ public class PlayerListener implements Listener
     @EventHandler
     public void onHeroChat(ChannelChatEvent e)
     {
-        String prefix = PlayerManager.getPrefix(e.getSender().getName());
+        Status status = PlayerManager.getStatus(e.getSender().getName());
+        String prefix = null;
+
+        if (status.equals(Status.MARRIED_TO_PERSON))
+            prefix = "&d\u2665 &r";
+        else if (status.equals(Status.MARRIED_TO_LEFT_HAND))
+            prefix = "&d\u2666 &r";
+        else if (status.equals(Status.MARRIED_TO_RIGHT_HAND))
+            prefix = "&d\u2666 &r";
+
         if (prefix == null)
             prefix = "";
 

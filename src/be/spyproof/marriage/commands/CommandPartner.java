@@ -6,10 +6,13 @@ import be.spyproof.marriage.Messages;
 import be.spyproof.marriage.Status;
 import be.spyproof.marriage.annotations.Beta;
 import be.spyproof.marriage.annotations.Command;
+import be.spyproof.marriage.annotations.Default;
 import be.spyproof.marriage.datamanager.PlayerManager;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.command.CommandSender;
+
+import java.util.Date;
 
 /**
  * Created by Spyproof on 5/05/2015.
@@ -17,7 +20,6 @@ import org.bukkit.command.CommandSender;
  */
 public class CommandPartner
 {
-    @Beta
     @Command(command = "partner", trigger = "info", args = {}, playersOnly = true, permission = "marriage.player.partner.name", desc = "Check on your partner", usage = "/partner info")
     public void getPartnerName(CommandSender sender)
     {
@@ -55,13 +57,33 @@ public class CommandPartner
         {
             Marriage.sendMessage(sender, "&e" + partnerName + "&e is &aonline");
         }else{
-            //TODO
-        }
+            long timeDiff = (System.currentTimeMillis() - PlayerManager.getLastOnline(partnerName)) / 1000;
+            int seconds = (int)timeDiff%60;
+            timeDiff = timeDiff / 60;
+            int minutes = (int)timeDiff%60;
+            timeDiff = timeDiff / 60;
+            int hours = (int)timeDiff%24;
+            timeDiff = timeDiff / 24;
+            int days = (int)timeDiff;
 
-        Marriage.sendMessage(sender, "&1Not implemented yet");
+            //Last seen formatting
+            if (days > 7)
+            {
+                String message = Messages.lastSeenOver7Days.replace("{days}", days + "");
+                Marriage.sendMessage(sender, message);
+            }
+            else if (days > 0)
+            {
+                String message = Messages.lastSeenOver1Day.replace("{days}", days + "").replace("{hours}", hours + "");
+                Marriage.sendMessage(sender, message);
+            }else{
+                String message = Messages.lastSeen.replace("{hours}", hours + "").replace("{minutes}", minutes + "")
+                        .replace("{seconds}", seconds + "");
+                Marriage.sendMessage(sender, message);
+            }
+        }
     }
 
-    @Beta
     @Command(command = "partner", trigger = "chat", args = {}, playersOnly = true, permission = "marriage.player.partner.chat", desc = "Chat privately with your partner", usage = "/partner chat")
     public void chat(CommandSender sender)
     {
@@ -97,6 +119,7 @@ public class CommandPartner
             return;
         }
 
+        //TODO check for pvp stuff
         String partnerName = PlayerManager.getPartner(sender.getName());
         Player partner = Marriage.getPlayer(partnerName);
         if (partner == null)
@@ -152,7 +175,6 @@ public class CommandPartner
         Marriage.sendMessage(sender, "&1Not implemented yet");
     }
 
-    @Beta
     @Command(command = "partner", trigger = "trustinv", args = {}, playersOnly = true, permission = "marriage.player.partner.inventory", desc = "Let's your partner open your inventory", usage = "/partner trustinv")
     public void trustInventory(CommandSender sender)
     {
@@ -175,5 +197,20 @@ public class CommandPartner
                     "&6&lThey can take something even when you told them not to!\n" +
                     "&bUse &3&l/partner trustinv&b to undo this");
         }
+    }
+
+    @Beta
+    @Default({"1"})
+    @Command(command = "partner", trigger = "help", args = {"{int}"}, playersOnly = true, helpHidden = true)
+    public void help(CommandSender sender, String pageNr)
+    {
+        int page;
+        try {
+            page = Integer.parseInt(pageNr);
+        } catch (NumberFormatException e) {
+            page = 1;
+        }
+
+        CommandHandler.getCommandHandler().showHelp("partner", sender, page);
     }
 }

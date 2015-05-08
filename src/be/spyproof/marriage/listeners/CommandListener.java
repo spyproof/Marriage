@@ -19,7 +19,7 @@ public class CommandListener implements CommandExecutor
             System.arraycopy(strings, 1, args, 0, args.length);
             CommandHandler.getCommandHandler().callCommand(command.getName(), strings[0], commandSender, args);
         }else {
-            CommandHandler.getCommandHandler().callCommand(command.getName(), "none", commandSender, strings);
+            CommandHandler.getCommandHandler().callCommand(command.getName(), "", commandSender, strings);
         }
 
         return true;

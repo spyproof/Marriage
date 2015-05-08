@@ -130,7 +130,7 @@ public class CommandHandler implements TabCompleter
             //If the method has the @Command
             if (cmdInfo != null)
             {
-                //if the commands match "/command1" ?= "/command2"
+                //if the commands match "/command1" ?= "/command2" TODO remove this?
                 if (cmdInfo.command().equalsIgnoreCase(command))
                 {
                     //Fill defaults based on @Default (does not overwrite)
@@ -145,13 +145,13 @@ public class CommandHandler implements TabCompleter
                             Marriage.sendDebugInfo(sender.getName() + " is not a player, the command is only for players");
                             return;
                         }else {
-                            //Check for prmissions
+                            //Check for permissions
                             if (hasPerm(sender, cmdInfo.permission()))
                             {
                                 try {
                                     //Check if the command is in beta (has @beta)
                                     if (method.isAnnotationPresent(Beta.class) && Marriage.plugin.getConfig().getBoolean("beta-testing"))
-                                        Marriage.sendMessage(sender, "&b&oThis command is in testing fase! Please report all bugs!");
+                                        Marriage.sendMessage(sender, method.getAnnotation(Beta.class).value());
                                     else if (method.isAnnotationPresent(Beta.class) && !Marriage.plugin.getConfig().getBoolean("beta-testing"))
                                     {
                                         Marriage.sendMessage(sender, "&cEnable beta testing to get access to this " +
@@ -176,7 +176,7 @@ public class CommandHandler implements TabCompleter
                                 return;
                             }else{
                                 Marriage.sendMessage(sender, Messages.noPermission);
-                                Marriage.sendDebugInfo("&c" + sender.getName() + " does not have the permission:\n&o" + cmdInfo.permission());
+                                Marriage.sendDebugInfo("&c" + sender.getName() + " does not have the permission:\n&c&o" + cmdInfo.permission());
                                 return;
                             }
                         }
@@ -187,14 +187,52 @@ public class CommandHandler implements TabCompleter
 
         //If no correct command usage is found, show the default help page
         //If the command has a trigger "help", it will override the default help page
-        if (trigger.equalsIgnoreCase("help"))
+        if (trigger.equalsIgnoreCase(""))
         {
+            //Check for an overwriting help trigger
+            for (Command cmd : commandMap.keySet())
+            {
+                method = commandMap.get(cmd);
+                if (cmd.trigger().equalsIgnoreCase("help") && cmd.command().equalsIgnoreCase(command))
+                    try
+                    {
+                        args = fillDefaults(method, args, sender.getName());
+                        if (method.isAnnotationPresent(Beta.class) && Marriage.plugin.getConfig().getBoolean("beta-testing"))
+                            Marriage.sendMessage(sender, method.getAnnotation(Beta.class).value());
+                        else if (method.isAnnotationPresent(Beta.class) && !Marriage.plugin.getConfig().getBoolean("beta-testing"))
+                        {
+                            Marriage.sendMessage(sender, "&cEnable beta testing to get access to this command");
+                            Marriage.sendDebugInfo("Beta testing access only");
+                            return;
+                        }
+                        if (args.length == 0)
+                            method.invoke(instances.get(method), sender);
+                        else if (args.length == 1)
+                            method.invoke(instances.get(method), sender, args[0]);
+                        else
+                            method.invoke(instances.get(method), sender, args);
+                        return;
+                    } catch (IllegalAccessException e)
+                    {
+                        e.printStackTrace();
+                    } catch (InvocationTargetException e)
+                    {
+                        e.printStackTrace();
+                    }
+            }
+
+            //Get the page number for the default help message
             int page = 1;
 
             if (args != null)
                 if (args.length != 0)
-                    page = Integer.parseInt(args[0]);
+                    try {
+                        page = Integer.parseInt(args[0]);
+                    } catch (NumberFormatException e) {
+                        page = 1;
+                    }
 
+            //Show the default help message
             showHelp(command, sender, page);
             return;
         }

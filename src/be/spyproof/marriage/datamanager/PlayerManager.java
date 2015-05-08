@@ -277,29 +277,6 @@ public class PlayerManager
         return false;
     }
 
-    public static String getPrefix(String name)
-    {
-        name = name.toLowerCase();
-        Status status = null;
-        try {
-            status = getStatus(name);
-        } catch (IllegalArgumentException e) {
-            return null;
-        }
-
-        //TODO Make this a config?
-
-        if (status.equals(Status.MARRIED_TO_PERSON))
-            return "&d\u2665 &r";
-        else if (status.equals(Status.MARRIED_TO_LEFT_HAND))
-            return "&d\u2666 &r";
-        else if (status.equals(Status.MARRIED_TO_RIGHT_HAND))
-            return "&d\u2666 &r";
-        else
-            return null;
-
-    }
-
     /**
      * Edit player data
      */
