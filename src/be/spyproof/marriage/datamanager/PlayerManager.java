@@ -1,263 +1,312 @@
 package be.spyproof.marriage.datamanager;
 
 import be.spyproof.marriage.Gender;
-import be.spyproof.marriage.Marriage;
 import be.spyproof.marriage.Messages;
 import be.spyproof.marriage.Status;
-import org.bukkit.Location;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
 
-import java.io.File;
-import java.io.IOException;
+import org.bukkit.Location;
+
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by Spyproof on 1/05/2015.
  */
 public class PlayerManager
 {
-    private static ArrayList<PlayerData> playerData = new ArrayList<PlayerData>();
-    private static LocalStorage localStorage = new LocalStorage(new File("plugins/Marriage"), "players.yml");
-
+	private DatabaseHandler database;
+    private Map<String, PlayerData> playerData = new HashMap<String, PlayerData>();
+    private Map<String, PlayerData> partnerData = new HashMap<String, PlayerData>();
+    
     /**
-     * TODO redo storing stuff
+     * EVERYTHING STORED IN MYSQL (except for partnerchat per request)
      * @ Player file
-     * Name:        Local & Global
-     * Gender:      Global
-     * Status:      Global
-     * Partner:     Global
-     * Trusts:      Global
+     * Name:        MYSQL  
+     * Gender:      MYSQL
+     * Status:      MYSQL
+     * Partner:     MYSQL
+     * Trusts:      MYSQL
      * Chat:        Not stored
-     * Last seen:   Local
-     * socialspy:   Local or permission?
+     * Last seen:   MYSQL
+     * socialspy:   permission
      *
      *
      * @ Partner file
-     * Money:       Local
-     * Home:        Local
+     * Money:       MYSQL
+     * Home:        MYSQL
      *
      */
 
-    public static void addPlayer(String name)
+    public PlayerManager()
     {
-        if (!isPlayerLoaded(name))
-            playerData.add(new PlayerData(name, Gender.HIDDEN, Status.SINGLE, "", false, false, 0, 0, 0));
+    	database = new DatabaseHandler();
+    }
+    
+    public void addPlayer(String name)
+    {    	
+    	if (partnerData.containsKey(name))
+    	{
+    		unloadPlayer(name);
+    	}
+    	
+    	PlayerData player = database.getPlayer(name);
+    	if (player != null)
+    	{
+    		playerData.put(name, player);
+    		String partnerName = playerData.get(name).getPartner();
+    		if (!partnerName.equals("") && !playerData.containsKey(partnerName))
+    		{
+    	    	PlayerData partner = database.getPlayer(partnerName);
+    	    	if (partner != null)
+    	    	{
+    	    		partnerData.put(partnerName, partner);
+    	    	}
+    		}
+    	}
+    	else if (!playerData.containsKey(name))
+    	{
+    		player = new PlayerData(name, Gender.HIDDEN, Status.SINGLE, "", false, false, 0, 0, 0, 0L, 0.0);
+            playerData.put(name, player);
+    		database.insertPlayer(player);
+    	}
     }
 
-    public static void addPlayer(String name, Gender gender, Status status, String partner, boolean trustsPartner, boolean homeSet, int homeX, int homeY, int homeZ)
+    public ArrayList<PlayerData> getLoadedPlayers()
     {
-        if (!isPlayerLoaded(name))
-            playerData.add(new PlayerData(name, gender, status, partner, trustsPartner, homeSet, homeX, homeY, homeZ));
+        return (ArrayList<PlayerData>) playerData.values();
     }
-
-    public static ArrayList<PlayerData> getLoadedPlayers()
+    
+    public ArrayList<PlayerData> getLoadedPartners()
     {
-        return playerData;
+    	return (ArrayList<PlayerData>) partnerData.values();
     }
 
     /**
      * Saving and loading
      */
 
-    public static void savePlayer(String name)
+    public void savePlayer(String name)
     {
-        try{
-            int i = getPlayerIndex(name);
-            if (i == -1)
-                return;
-            localStorage.setGender(name, playerData.get(i).getGender());
-            localStorage.setStatus(name, playerData.get(i).getStatus());
-            localStorage.setPartner(name, playerData.get(i).getPartner());
-            localStorage.setTrustsPartner(name, playerData.get(i).trustsPartner());
-            localStorage.setHomeSet(name, playerData.get(i).isHomeSet());
-            localStorage.setHomeX(name, playerData.get(i).getHomeX());
-            localStorage.setHomeY(name, playerData.get(i).getHomeY());
-            localStorage.setHomeZ(name, playerData.get(i).getHomeZ());
-        } catch (IllegalArgumentException ignored){}
+    	if (playerData.containsKey(name))
+    		database.savePlayer(playerData.get(name));
+    	
+    	if (partnerData.containsKey(name))
+    		database.savePlayer(partnerData.get(name));
     }
 
-    public static void saveAllPlayers()
+    public void saveAllPlayers()
     {
-        for (PlayerData aPlayerData : playerData)
+        for (PlayerData aPlayerData : playerData.values())
         {
-            localStorage.setGender(aPlayerData.getName(), aPlayerData.getGender());
-            localStorage.setStatus(aPlayerData.getName(), aPlayerData.getStatus());
-            localStorage.setPartner(aPlayerData.getName(), aPlayerData.getPartner());
-            localStorage.setTrustsPartner(aPlayerData.getName(), aPlayerData.trustsPartner());
-            localStorage.setHomeSet(aPlayerData.getName(), aPlayerData.isHomeSet());
-            localStorage.setHomeX(aPlayerData.getName(), aPlayerData.getHomeX());
-            localStorage.setHomeY(aPlayerData.getName(), aPlayerData.getHomeY());
-            localStorage.setHomeZ(aPlayerData.getName(), aPlayerData.getHomeZ());
-            localStorage.saveConfig();
+            database.savePlayer(aPlayerData);
         }
-    }
-
-    public static void loadPlayer(String name)
-    {
-        name = name.toLowerCase();
-        if (!isPlayerLoaded(name))
+        for (PlayerData aPartnerData : partnerData.values())
         {
-            Gender gender = null;
-            try {
-                gender = localStorage.getGender(name);
-            } catch (Exception e) {// = player not found
-                addPlayer(name);
-                return;
-            }
-            Status status = localStorage.getStatus(name);
-            String partner = localStorage.getPartner(name);
-            boolean trust = localStorage.trustsPartner(name);
-            boolean homeSet = localStorage.isHomeSet(name);
-            int homeX = localStorage.getHomeX(name);
-            int homeY = localStorage.getHomeY(name);
-            int homeZ = localStorage.getHomeZ(name);
-
-            addPlayer(name, gender, status, partner, trust, homeSet, homeX, homeY, homeZ);
+            database.savePlayer(aPartnerData);
         }
     }
 
-    public static void unloadPlayer(String name)
+    public void unloadPlayer(String name)
     {
-        try {
-            int i = getPlayerIndex(name);
-            savePlayer(name);
-            playerData.remove(i);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    	if (partnerData.containsKey(name))
+    	{
+    		savePlayer(name);
+    		partnerData.remove(name);
+    	}
+    	else
+    	{
+	    	if (partnerData.containsKey(playerData.get(name).getPartner()))
+	    	{
+	    		savePlayer(playerData.get(name).getPartner());
+	    		partnerData.remove(playerData.get(name).getPartner());
+	    	}
+	    	
+	        playerData.get(name).setLastSeen(System.currentTimeMillis() / 1000L);
+	        savePlayer(name);
+	        playerData.remove(name);
+    	}
     }
 
-    public static void reload(String[] names)
+    public void reload(String[] names)
     {
         playerData.clear();
-        localStorage.loadConfig();
+        partnerData.clear();
         for (int i = 0; i < names.length; i++)
-            loadPlayer(names[i]);
+        {
+            addPlayer(names[i]);  
+        }
     }
 
-    public static void reload()
+    public void reload()
     {
-        String[] players = new String[playerData.size()];
-        for (int i = 0; i < playerData.size(); i++)
-            players[i] = playerData.get(i).getName();
-        reload(players);
+        reload(playerData.keySet().toArray(new String[playerData.size()]));
     }
 
     /**
      * Read player data
      */
 
-    public static Gender getGender(String name) throws IllegalArgumentException
+    public Double getBalance(String name)
     {
-        name = name.toLowerCase();
-        int i = getPlayerIndex(name);
-
-        if (i == -1)
-            return localStorage.getGender(name);
-
-        return playerData.get(i).getGender();
+    	if (playerData.containsKey(name))
+    	{
+    		return playerData.get(name).getBalance();
+    	}
+    	else if (partnerData.containsKey(name))
+    	{
+    		return partnerData.get(name).getBalance();
+    	}
+    	else
+    	{
+    		return null;
+    	}
+    }
+    
+    public Gender getGender(String name)
+    {
+    	if (playerData.containsKey(name))
+    	{
+    		return playerData.get(name).getGender();
+    	}
+    	else if (partnerData.containsKey(name))
+    	{
+    		return partnerData.get(name).getGender();
+    	}
+    	else
+    	{
+    		return null;
+    	}
     }
 
-    public static Status getStatus(String name) throws IllegalArgumentException
+    public Status getStatus(String name) throws IllegalArgumentException
     {
-        name = name.toLowerCase();
-        int i = getPlayerIndex(name);
-
-        if (i == -1)
-            return localStorage.getStatus(name);
-
-        return playerData.get(i).getStatus();
+    	if (playerData.containsKey(name))
+    	{
+    		return playerData.get(name).getStatus();
+    	}
+    	else if (partnerData.containsKey(name))
+    	{
+    		return partnerData.get(name).getStatus();
+    	}
+    	else
+    	{
+    		return null;
+    	}
     }
 
-    public static String getPartner(String name)
+    public String getPartner(String name)
     {
-        name = name.toLowerCase();
-        int i = getPlayerIndex(name);
-
-        if (i == -1)
-        {
-            try {
-                return localStorage.getPartner(name);
-            } catch (Exception ignored) {}
-        }
-
-        return playerData.get(i).getPartner();
+    	if (playerData.containsKey(name))
+    	{
+    		return playerData.get(name).getPartner();
+    	}
+    	else
+    	{
+    		return "";
+    	}
     }
 
-    public static boolean trustsPartner(String name) throws IllegalArgumentException
+    public boolean trustsPartner(String name)
     {
-        name = name.toLowerCase();
-        int i = getPlayerIndex(name);
-
-        if (i == -1)
-            return localStorage.trustsPartner(name);
-
-        return playerData.get(i).trustsPartner();
+    	if (playerData.containsKey(name))
+    	{
+    		return playerData.get(name).trustsPartner();
+    	}
+    	else if (partnerData.containsKey(name))
+    	{
+    		return partnerData.get(name).trustsPartner();
+    	}
+    	else
+    	{
+    		return false;
+    	}
     }
 
-    public static boolean isHomeSet(String name)
+    public boolean isHomeSet(String name)
     {
-        name = name.toLowerCase();
-        int i = getPlayerIndex(name);
-
-        if (i == -1)
-            return localStorage.isHomeSet(name);
-
-        return playerData.get(i).isHomeSet();
+    	if (playerData.containsKey(name))
+    	{
+    		return playerData.get(name).isHomeSet();
+    	}
+    	else if (partnerData.containsKey(name))
+    	{
+    		return partnerData.get(name).isHomeSet();
+    	}
+    	else
+    	{
+    		return false;
+    	}
     }
 
-    public static int getHomeX(String name)
+    public int getHomeX(String name)
     {
-        name = name.toLowerCase();
-        int i = getPlayerIndex(name);
-
-        if (i == -1)
-            return localStorage.getHomeX(name);
-
-        return playerData.get(i).getHomeX();
+    	if (playerData.containsKey(name))
+    	{
+    		return playerData.get(name).getHomeX();
+    	}
+    	else if (partnerData.containsKey(name))
+    	{
+    		return partnerData.get(name).getHomeX();
+    	}
+    	else
+    	{
+    		return 0;
+    	}
     }
 
-    public static int getHomeY(String name)
+    public int getHomeY(String name)
     {
-        name = name.toLowerCase();
-        int i = getPlayerIndex(name);
-
-        if (i == -1)
-            return localStorage.getHomeY(name);
-
-        return playerData.get(i).getHomeY();
+    	if (playerData.containsKey(name))
+    	{
+    		return playerData.get(name).getHomeY();
+    	}
+    	else if (partnerData.containsKey(name))
+    	{
+    		return partnerData.get(name).getHomeY();
+    	}
+    	else
+    	{
+    		return 0;
+    	}
     }
 
-    public static int getHomeZ(String name)
+    public int getHomeZ(String name)
     {
-        name = name.toLowerCase();
-        int i = getPlayerIndex(name);
-
-        if (i == -1)
-            return localStorage.getHomeZ(name);
-
-        return playerData.get(i).getHomeZ();
+    	if (playerData.containsKey(name))
+    	{
+    		return playerData.get(name).getHomeZ();
+    	}
+    	else if (partnerData.containsKey(name))
+    	{
+    		return partnerData.get(name).getHomeZ();
+    	}
+    	else
+    	{
+    		return 0;
+    	}
     }
 
-    public static long getLastOnline(String name)
+    public long getLastOnline(String name)
     {
-        Long time = localStorage.getLastOnline(name);
-
-        if (time == 0)
-            throw new IllegalArgumentException(Messages.notOnline.replace("{player}", name));
-
-        return time;
+    	if (playerData.containsKey(name))
+    	{
+    		return playerData.get(name).getLastSeen();
+    	}
+    	else if (partnerData.containsKey(name))
+    	{
+    		return partnerData.get(name).getLastSeen();
+    	}
+    	else
+    	{
+    		Messages.notOnline.replace("{player}", name);
+    		return 0;
+    	}
     }
 
-    public static boolean isMarried(String name)
-    {
-        Status status = null;
-        try {
-            status = getStatus(name);
-        } catch (IllegalArgumentException e) {
-            return false;
-        }
+    public boolean isMarried(String name)
+    {    	
+        Status status = getStatus(name);
 
         if (status.equals(Status.MARRIED_TO_PERSON))
             return true;
@@ -267,146 +316,169 @@ public class PlayerManager
             return status.equals(Status.MARRIED_TO_RIGHT_HAND);
     }
 
-    public static boolean isPartnerChatOn(String name)
+    public boolean isPartnerChatOn(String name)
     {
-        name = name.toLowerCase();
-        int i = getPlayerIndex(name);
-        if (i != -1)
-            return playerData.get(i).isPartnerChatOn();
-
-        return false;
+    	if (playerData.containsKey(name))
+    	{
+    		return playerData.get(name).isPartnerChatOn();
+    	}
+    	else
+    	{
+    		return false;
+    	}
     }
 
     /**
      * Edit player data
      */
 
-    public static void resetPlayer(String name)
+    public void resetPlayer(String name)
     {
-        name = name.toLowerCase();
-        int i = getPlayerIndex(name);
-        if (i == -1)
-        {
-            localStorage.removePlayer(name);
-            return;
-        }
-        playerData.remove(i);
-        addPlayer(name);
+    	if (playerData.containsKey(name))
+    	{
+    		database.deletePlayer(name);
+            playerData.remove(name);
+            addPlayer(name);
+    	}
     }
 
-    public static void setGender(String name, Gender gender)
+    public void setGender(String name, Gender gender)
     {
-        name = name.toLowerCase();
-        int i = getPlayerIndex(name);
-        if (i == -1)
-        {
-            localStorage.setGender(name, gender);
-            return;
-        }
-        playerData.get(i).setGender(gender);
+    	if (playerData.containsKey(name))
+    	{
+    		playerData.get(name).setGender(gender);
+    	}
+    	else if (partnerData.containsKey(name))
+    	{
+    		partnerData.get(name).setGender(gender);
+    	}
     }
 
-    public static void setStatus(String name, Status status)
+    public void setStatus(String name, Status status)
     {
-        name = name.toLowerCase();
-        int i = getPlayerIndex(name);
-        if (i == -1)
-        {
-            localStorage.setStatus(name, status);
-            return;
-        }
-        playerData.get(i).setStatus(status);
+    	if (playerData.containsKey(name))
+    	{
+    		playerData.get(name).setStatus(status);
+    	}
+    	else if (partnerData.containsKey(name))
+    	{
+    		partnerData.get(name).setStatus(status);
+    	}
     }
 
-    public static void setPartner(String name, String partner)
+    public void setPartner(String name, String partner)
     {
-        name = name.toLowerCase();
-        partner = partner.toLowerCase();
-        int i = getPlayerIndex(name);
-        if (i == -1)
-        {
-            localStorage.setPartner(name, partner);
-            return;
-        }
-        playerData.get(i).setPartner(partner);
+    	if (playerData.containsKey(name))
+    	{
+    		playerData.get(name).setPartner(partner);
+    	}
+    	else if (partnerData.containsKey(name))
+    	{
+    		partnerData.get(name).setPartner(partner);
+    	}
     }
 
-    public static void setTrustsPartner(String name, boolean trustsPartner)
+    public void setTrustsPartner(String name, boolean trustsPartner)
     {
-        name = name.toLowerCase();
-        int i = getPlayerIndex(name);
-        if (i == -1)
-        {
-            localStorage.setTrustsPartner(name, trustsPartner);
-            return;
-        }
-        playerData.get(i).setTrustsPartner(trustsPartner);
+    	if (playerData.containsKey(name))
+    	{
+    		playerData.get(name).setTrustsPartner(trustsPartner);
+    	}
+    	else if (partnerData.containsKey(name))
+    	{
+    		partnerData.get(name).setTrustsPartner(trustsPartner);
+    	}
     }
 
-    public static void removeHome(String name)
+    public void setBalance(String name, Double balance)
     {
-        name = name.toLowerCase();
-        int i = getPlayerIndex(name);
-        if (i == -1)
-        {
-            localStorage.setHomeSet(name, false);
-            return;
-        }
-        playerData.get(i).setHomeSet(false);
+    	if (playerData.containsKey(name))
+    	{
+    		playerData.get(name).setBalance(balance);
+    	}
+    	else if (partnerData.containsKey(name))
+    	{
+    		partnerData.get(name).setBalance(balance);
+    	}
     }
 
-    public static void setHome(String name, Location loc)
+    public void removeHome(String name)
     {
-        name = name.toLowerCase();
-        int i = getPlayerIndex(name); //TODO world, yawn, pitch?
-        if (i == -1)
-        {
-            localStorage.setHomeSet(name, true);
-            localStorage.setHomeX(name, loc.getBlockX());
-            localStorage.setHomeY(name, loc.getBlockY());
-            localStorage.setHomeZ(name, loc.getBlockZ());
-            return;
-        }
-        playerData.get(i).setHomeSet(true);
-        playerData.get(i).setHomeX(loc.getBlockX());
-        playerData.get(i).setHomeY(loc.getBlockY());
-        playerData.get(i).setHomeZ(loc.getBlockZ());
+    	if (playerData.containsKey(name))
+    	{
+    		playerData.get(name).setHomeSet(false);
+    	}
+    	else if (partnerData.containsKey(name))
+    	{
+    		partnerData.get(name).setHomeSet(false);
+    	}
     }
 
-    public static void setLastOnline(String name, long time)
+    public void setHome(String name, Location loc)
     {
-        localStorage.setLastOnline(name, time);
+    	if (playerData.containsKey(name))
+    	{
+    		playerData.get(name).setHomeSet(true);
+    		playerData.get(name).setHomeX(loc.getBlockX());
+    		playerData.get(name).setHomeY(loc.getBlockY());
+    		playerData.get(name).setHomeZ(loc.getBlockZ());
+    	}
+    	else if (partnerData.containsKey(name))
+    	{
+    		partnerData.get(name).setHomeSet(true);
+    		partnerData.get(name).setHomeX(loc.getBlockX());
+    		partnerData.get(name).setHomeY(loc.getBlockY());
+    		partnerData.get(name).setHomeZ(loc.getBlockZ());
+    	}
     }
 
-    public static void setPartnerChat(String name, boolean chat)
+    public void setLastOnline(String name, long time)
     {
-        name = name.toLowerCase();
-        int i = getPlayerIndex(name);
-        if (i != -1)
-            playerData.get(i).setPartnerChat(chat);
+    	if (playerData.containsKey(name))
+    	{
+    		playerData.get(name).setLastSeen(time);
+    	}
+    	else if (partnerData.containsKey(name))
+    	{
+    		partnerData.get(name).setLastSeen(time);
+    	}
     }
 
+    public void setPartnerChat(String name, boolean chat)
+    {
+    	if (playerData.containsKey(name))
+    	{
+    		playerData.get(name).setPartnerChat(chat);
+    	}
+    	else if (partnerData.containsKey(name))
+    	{
+    		partnerData.get(name).setPartnerChat(chat);
+    	}
+    }
+    
     /**
-     * Private
-     */
+     * Static
+     **/
 
-    private static int getPlayerIndex(String name)
-    {
-        name = name.toLowerCase();
-        for (int i = 0; i < playerData.size(); i++)
-            if (playerData.get(i).getName().equals(name))
-                return i;
-
-        return -1;
+    public static Gender genderFromString(String genderString) {
+        if (genderString != null) {
+            for (Gender gender : Gender.values()) {
+                if (gender.equalsName(genderString)) {
+                    return gender;
+                }
+            }
+        }
+        return null;
     }
 
-    private static boolean isPlayerLoaded(String name)
-    {
-        name = name.toLowerCase();
-        for (int i = 0; i < playerData.size(); i++)
-            if (playerData.get(i).getName().equals(name))
-                return true;
-
-        return false;
+    public static Status statusFromString(String statusString) {
+        if (statusString != null) {
+            for (Status gender : Status.values()) {
+                if (gender.equalsName(statusString)) {
+                    return gender;
+                }
+            }
+        }
+        return Status.NOT_INTERESTED; // Default value
     }
 }

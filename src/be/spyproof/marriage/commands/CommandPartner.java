@@ -5,56 +5,64 @@ import be.spyproof.marriage.annotations.Beta;
 import be.spyproof.marriage.annotations.Command;
 import be.spyproof.marriage.annotations.Default;
 import be.spyproof.marriage.datamanager.PlayerManager;
+
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.command.CommandSender;
 
-import java.util.Date;
+//import java.util.Date;
 
 /**
  * Created by Spyproof on 5/05/2015.
  * Command handling inspired by https://github.com/Zenith-
  */
 public class CommandPartner
-{
+{	
+	private PlayerManager playerManager;
+
+    public CommandPartner()
+    {
+    	this.playerManager = Marriage.plugin.getPlayerManager();
+    }
+    
     @Command(command = "partner", trigger = "info", args = {}, playersOnly = true, permission = Permissions.partnerInfo, desc = "Check on your partner", usage = "/partner info")
     public void getPartnerName(CommandSender sender)
     {
-        Status status = PlayerManager.getStatus(sender.getName());
+        Status status = playerManager.getStatus(sender.getName());
 
         if (status.equals(Status.MARRIED_TO_PERSON))
         {
-            String partnerName = PlayerManager.getPartner(sender.getName());
-            Player partner = Marriage.getPlayer(partnerName);
-            Marriage.sendMessage(sender, "&eYou are married to &6" + partnerName + "&e and is " + (partner == null ? "&cfffline" : "&aonline"));
+            String partnerName = playerManager.getPartner(sender.getName());
+            Player partner = Marriage.plugin.getPlayer(partnerName);
+            Marriage.plugin.sendMessage(sender, "&eYou are married to &6" + partnerName + "&e and is " + (partner == null ? "&cfffline" : "&aonline"));
             //TODO home location + balance
-            Marriage.sendMessage(sender, "&eYou are &6" + (PlayerManager.trustsPartner(partnerName) ? "allowed" : "not allowed") + "&e to open " + (PlayerManager.getGender(partnerName).equals(Gender.FEMALE) ? "her" : "his") + " inventory");
+            Marriage.plugin.sendMessage(sender, "&eYou are &6" + (playerManager.trustsPartner(partnerName) ? "allowed" : "not allowed") + "&e to open " + (playerManager.getGender(partnerName).equals(Gender.FEMALE) ? "her" : "his") + " inventory");
         }
         else if (status.equals(Status.MARRIED_TO_LEFT_HAND))
-            Marriage.sendMessage(sender, "&eYou are married to your left hand");
+            Marriage.plugin.sendMessage(sender, "&eYou are married to your left hand");
         else if (status.equals(Status.MARRIED_TO_RIGHT_HAND))
-            Marriage.sendMessage(sender, "&eYou are married to your right hand");
+            Marriage.plugin.sendMessage(sender, "&eYou are married to your right hand");
         else
-            Marriage.sendMessage(sender, Messages.notMarried);
+            Marriage.plugin.sendMessage(sender, Messages.notMarried);
     }
 
     @Beta
-    @Command(command = "partner", trigger = "seen", args = {}, playersOnly = true, permission =  Permissions.partnerSeen, desc = "Last time your partner was online", usage = "/partner seen")
+    @Command(command = "partner", trigger = "seen", args = {}, playersOnly = true, permission = Permissions.partnerSeen, desc = "Last time your partner was online", usage = "/partner seen", helpHidden = true)
     public void lastSeenPartner(CommandSender sender)
     {
-        if (!PlayerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))
+        if (!playerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))
         {
-            Marriage.sendMessage(sender, Messages.notMarriedToPlayer);
+            Marriage.plugin.sendMessage(sender, Messages.notMarriedToPlayer);
             return;
         }
 
-        String partnerName = PlayerManager.getPartner(sender.getName());
-        Player partner = Marriage.getPlayer(partnerName);
+        String partnerName = playerManager.getPartner(sender.getName());
+        Player partner = Marriage.plugin.getPlayer(partnerName);
         if (partner != null )
         {
-            Marriage.sendMessage(sender, "&e" + partnerName + "&e is &aonline");
+            Marriage.plugin.sendMessage(sender, "&e" + partnerName + "&e is &aonline");
         }else{
-            long timeDiff = (System.currentTimeMillis() - PlayerManager.getLastOnline(partnerName)) / 1000;
+            long timeDiff = (System.currentTimeMillis() - playerManager.getLastOnline(partnerName)) / 1000;
             int seconds = (int)timeDiff%60;
             timeDiff = timeDiff / 60;
             int minutes = (int)timeDiff%60;
@@ -67,129 +75,129 @@ public class CommandPartner
             if (days > 7)
             {
                 String message = Messages.lastSeenOver7Days.replace("{days}", days + "");
-                Marriage.sendMessage(sender, message);
+                Marriage.plugin.sendMessage(sender, message);
             }
             else if (days > 0)
             {
                 String message = Messages.lastSeenOver1Day.replace("{days}", days + "").replace("{hours}", hours + "");
-                Marriage.sendMessage(sender, message);
+                Marriage.plugin.sendMessage(sender, message);
             }else{
                 String message = Messages.lastSeen.replace("{hours}", hours + "").replace("{minutes}", minutes + "")
                         .replace("{seconds}", seconds + "");
-                Marriage.sendMessage(sender, message);
+                Marriage.plugin.sendMessage(sender, message);
             }
         }
     }
 
-    @Command(command = "partner", trigger = "chat", args = {}, playersOnly = true, permission =  Permissions.partnerChat, desc = "Chat privately with your partner", usage = "/partner chat")
+    @Command(command = "partner", trigger = "chat", args = {}, playersOnly = true, permission = Permissions.partnerChat, desc = "Chat privately with your partner", usage = "/partner chat")
     public void chat(CommandSender sender)
     {
-        if (!PlayerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))
+        if (!playerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))
         {
-            Marriage.sendMessage(sender, Messages.notMarriedToPlayer);
+            Marriage.plugin.sendMessage(sender, Messages.notMarriedToPlayer);
             return;
         }
 
-        if (PlayerManager.isPartnerChatOn(sender.getName()))
+        if (playerManager.isPartnerChatOn(sender.getName()))
         {
-            PlayerManager.setPartnerChat(sender.getName(), false);
-            Marriage.sendMessage(sender, "&dReturning to normal chat");
+            playerManager.setPartnerChat(sender.getName(), false);
+            Marriage.plugin.sendMessage(sender, "&dReturning to normal chat");
         }else
         {
-            Player partner = Marriage.getPlayer(PlayerManager.getPartner(sender.getName()));
+            Player partner = Marriage.plugin.getPlayer(playerManager.getPartner(sender.getName()));
             if (partner == null)
-                Marriage.sendMessage(sender, Messages.notOnline.replace("{player}", PlayerManager.getPartner(sender.getName())));
+                Marriage.plugin.sendMessage(sender, Messages.notOnline.replace("{player}", playerManager.getPartner(sender.getName())));
             else
             {
-                PlayerManager.setPartnerChat(sender.getName(), true);
-                Marriage.sendMessage(sender, "&dYou are now privately chatting with " + partner.getDisplayName());
+                playerManager.setPartnerChat(sender.getName(), true);
+                Marriage.plugin.sendMessage(sender, "&dYou are now privately chatting with " + partner.getDisplayName());
             }
         }
     }
 
-    @Command(command = "partner", trigger = "tp", args = {}, playersOnly = true, permission =  Permissions.partnerTp, desc = "Teleport to your partner", usage = "/partner tp")
+    @Command(command = "partner", trigger = "tp", args = {}, playersOnly = true, permission = Permissions.partnerTp, desc = "Teleport to your partner", usage = "/partner tp")
     public void teleport(Player sender)
     {
-        if (!PlayerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))
+        if (!playerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))
         {
-            Marriage.sendMessage(sender, Messages.notMarriedToPlayer);
+            Marriage.plugin.sendMessage(sender, Messages.notMarriedToPlayer);
             return;
         }
 
         //TODO check for pvp stuff
-        String partnerName = PlayerManager.getPartner(sender.getName());
-        Player partner = Marriage.getPlayer(partnerName);
+        String partnerName = playerManager.getPartner(sender.getName());
+        Player partner = Marriage.plugin.getPlayer(partnerName);
         if (partner == null)
         {
-            Marriage.sendMessage(sender, Messages.notOnline.replace("{player}", partnerName));
+            Marriage.plugin.sendMessage(sender, Messages.notOnline.replace("{player}", partnerName));
             return;
         }
 
         Location location = partner.getLocation();
         sender.teleport(location);
-        Marriage.sendMessage(sender, "&eTeleported to " + partner.getDisplayName());
-        Marriage.sendMessage(partner, "&e" + sender.getDisplayName() + " &eteleported to you");
+        Marriage.plugin.sendMessage(sender, "&eTeleported to " + partner.getDisplayName());
+        Marriage.plugin.sendMessage(partner, "&e" + sender.getDisplayName() + " &eteleported to you");
     }
 
     @Beta
-    @Command(command = "partner", trigger = "sethome", args = {}, playersOnly = true, permission =  Permissions.partnerHome, desc = "Set the home location", usage = "/partner sethome")
+    @Command(command = "partner", trigger = "sethome", args = {}, playersOnly = true, permission = Permissions.partnerHome, desc = "Set the home location", usage = "/partner sethome", helpHidden = true)
     public void setHome(Player sender)
     {
-        if (!PlayerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))
+        if (!playerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))
         {
-            Marriage.sendMessage(sender, Messages.notMarriedToPlayer);
+            Marriage.plugin.sendMessage(sender, Messages.notMarriedToPlayer);
             return;
         }
 
         Location l = sender.getLocation();
-        PlayerManager.setHome(sender.getName(), l);
-        Marriage.sendMessage(sender, "&1Not implemented yet");
+        playerManager.setHome(sender.getName(), l);
+        Marriage.plugin.sendMessage(sender, "&1Not implemented yet");
     }
 
     @Beta
-    @Command(command = "partner", trigger = "home", args = {}, playersOnly = true, permission = Permissions.partnerHome, desc = "Go to your home location", usage = "/partner home")
+    @Command(command = "partner", trigger = "home", args = {}, playersOnly = true, permission = Permissions.partnerHome, desc = "Go to your home location", usage = "/partner home", helpHidden = true)
     public void goHome(CommandSender sender)
     {
-        if (!PlayerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))
+        if (!playerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))
         {
-            Marriage.sendMessage(sender, Messages.notMarriedToPlayer);
+            Marriage.plugin.sendMessage(sender, Messages.notMarriedToPlayer);
             return;
         }
 
-        Marriage.sendMessage(sender, "&1Not implemented yet");
+        Marriage.plugin.sendMessage(sender, "&1Not implemented yet");
     }
 
     @Beta
-    @Command(command = "partner", trigger = "inv", args = {}, playersOnly = true, permission = Permissions.partnerInventory, desc = "Open your partner's inventory", usage = "/partner inv")
+    @Command(command = "partner", trigger = "inv", args = {}, playersOnly = true, permission = Permissions.partnerInventory, desc = "Open your partner's inventory", usage = "/partner inv", helpHidden = true)
     public void openInventory(CommandSender sender)
     {
-        if (!PlayerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))
+        if (!playerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))
         {
-            Marriage.sendMessage(sender, Messages.notMarriedToPlayer);
+            Marriage.plugin.sendMessage(sender, Messages.notMarriedToPlayer);
             return;
         }
 
-        Marriage.sendMessage(sender, "&1Not implemented yet");
+        Marriage.plugin.sendMessage(sender, "&1Not implemented yet");
     }
 
     @Command(command = "partner", trigger = "trustinv", args = {}, playersOnly = true, permission = Permissions.partnerInventory, desc = "Let's your partner open your inventory", usage = "/partner trustinv")
     public void trustInventory(CommandSender sender)
     {
-        if (!PlayerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))
+        if (!playerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))
         {
-            Marriage.sendMessage(sender, Messages.notMarriedToPlayer);
+            Marriage.plugin.sendMessage(sender, Messages.notMarriedToPlayer);
             return;
         }
 
-        boolean trustsPartner = PlayerManager.trustsPartner(sender.getName());
+        boolean trustsPartner = playerManager.trustsPartner(sender.getName());
         if (trustsPartner)
         {
-            PlayerManager.setTrustsPartner(sender.getName(), false);
-            Marriage.sendMessage(sender, "&bYou no longer allow your partner to open your inventory");
+            playerManager.setTrustsPartner(sender.getName(), false);
+            Marriage.plugin.sendMessage(sender, "&bYou no longer allow your partner to open your inventory");
         }else
         {
-            PlayerManager.setTrustsPartner(sender.getName(), true);
-            Marriage.sendMessage(sender, "&bYou allow your partner to open your inventory!\n" +
+            playerManager.setTrustsPartner(sender.getName(), true);
+            Marriage.plugin.sendMessage(sender, "&bYou allow your partner to open your inventory!\n" +
                     "&lYour partner can take anything! \n" +
                     "&6&lThey can take something even when you told them not to!\n" +
                     "&bUse &3&l/partner trustinv&b to undo this");

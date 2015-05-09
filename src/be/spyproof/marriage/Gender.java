@@ -22,16 +22,4 @@ public enum Gender
     public String toString(){
         return name;
     }
-
-    public static Gender fromString(String genderString) {
-        if (genderString != null) {
-            for (Gender gender : Gender.values()) {
-                if (gender.equalsName(genderString)) {
-                    return gender;
-                }
-            }
-        }
-        return null;
-    }
-
 }

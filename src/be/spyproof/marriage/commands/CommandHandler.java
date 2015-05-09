@@ -7,6 +7,7 @@ import be.spyproof.marriage.Permissions;
 import be.spyproof.marriage.annotations.Beta;
 import be.spyproof.marriage.annotations.Command;
 import be.spyproof.marriage.annotations.Default;
+
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
@@ -32,7 +33,8 @@ public class CommandHandler implements TabCompleter
     }
 
     //Register the command handling
-    public void registerCommands(Class commandClass)
+    @SuppressWarnings("rawtypes")
+	public void registerCommands(Class commandClass)
     {
         try
         {
@@ -66,11 +68,11 @@ public class CommandHandler implements TabCompleter
         List<String> help = getHelp(cmd, sender);
         if (help.size() == 0)
         {
-            Marriage.sendMessage(sender, Messages.noPermission);
+            Marriage.plugin.sendMessage(sender, Messages.noPermission);
             return;
         }
 
-        Marriage.sendMessage(sender, "&b&l====> &2&l" + Marriage.plugin.getName() + "&b&l <====");
+        Marriage.plugin.sendMessage(sender, "&b&l====> &2&l" + Marriage.plugin.getName() + "&b&l <====");
 
         //Show 8 commands per help page
         double helpPerPage = 8.0;
@@ -80,9 +82,9 @@ public class CommandHandler implements TabCompleter
 
         //Devide the help section into multiple pages
         for (int i = (int) (page*helpPerPage); i < ((int) ((page+1)*helpPerPage) < help.size() ? (int) ((page+1)*helpPerPage) : help.size()); i++)
-            Marriage.sendMessage(sender, help.get(i));
+            Marriage.plugin.sendMessage(sender, help.get(i));
         if (((int) ((page+1)*helpPerPage) < help.size()))
-            Marriage.sendMessage(sender, ChatColor.YELLOW + "/" + cmd + " help " + (page + 2));
+            Marriage.plugin.sendMessage(sender, ChatColor.YELLOW + "/" + cmd + " help " + (page + 2));
     }
 
     public List<String> getHelp(String cmd, CommandSender sender)
@@ -121,7 +123,7 @@ public class CommandHandler implements TabCompleter
         if (args != null)
             for (String s : args)
                 arg += " " + s;
-        Marriage.sendDebugInfo(sender.getName() + " invoked the command\n&b/" + arg);
+        Marriage.plugin.sendDebugInfo(sender.getName() + " invoked the command\n&b/" + arg);
 
         //Find the method that matches the command
         Method method = getCommandMethod(command, trigger);
@@ -142,8 +144,8 @@ public class CommandHandler implements TabCompleter
                         //Check if its player only
                         if (!(sender instanceof Player) && cmdInfo.playersOnly())
                         {
-                            Marriage.sendMessage(sender, Messages.playerOnly);
-                            Marriage.sendDebugInfo(sender.getName() + " is not a player, the command is only for players");
+                            Marriage.plugin.sendMessage(sender, Messages.playerOnly);
+                            Marriage.plugin.sendDebugInfo(sender.getName() + " is not a player, the command is only for players");
                             return;
                         }else {
                             //Check for permissions
@@ -152,12 +154,12 @@ public class CommandHandler implements TabCompleter
                                 try {
                                     //Check if the command is in beta (has @beta)
                                     if (method.isAnnotationPresent(Beta.class) && Marriage.plugin.getConfig().getBoolean("beta-testing"))
-                                        Marriage.sendMessage(sender, method.getAnnotation(Beta.class).value());
+                                        Marriage.plugin.sendMessage(sender, method.getAnnotation(Beta.class).value());
                                     else if (method.isAnnotationPresent(Beta.class) && !Marriage.plugin.getConfig().getBoolean("beta-testing"))
                                     {
-                                        Marriage.sendMessage(sender, "&cEnable beta testing to get access to this " +
+                                        Marriage.plugin.sendMessage(sender, "&cEnable beta testing to get access to this " +
                                                 "command");
-                                        Marriage.sendDebugInfo("Beta testing access only");
+                                        Marriage.plugin.sendDebugInfo("Beta testing access only");
                                         return;
                                     }
 
@@ -168,7 +170,7 @@ public class CommandHandler implements TabCompleter
                                         method.invoke(instances.get(method), sender, args[0]);
                                     else
                                         method.invoke(instances.get(method), sender, args);
-                                    Marriage.sendDebugInfo(sender.getName() + " successfully invoked the command!");
+                                    Marriage.plugin.sendDebugInfo(sender.getName() + " successfully invoked the command!");
                                 } catch (IllegalAccessException e) {
                                     e.printStackTrace();
                                 } catch (InvocationTargetException e) {
@@ -176,8 +178,8 @@ public class CommandHandler implements TabCompleter
                                 }
                                 return;
                             }else{
-                                Marriage.sendMessage(sender, Messages.noPermission);
-                                Marriage.sendDebugInfo("&c" + sender.getName() + " does not have the permission:\n&c&o" + cmdInfo.permission());
+                                Marriage.plugin.sendMessage(sender, Messages.noPermission);
+                                Marriage.plugin.sendDebugInfo("&c" + sender.getName() + " does not have the permission:\n&c&o" + cmdInfo.permission());
                                 return;
                             }
                         }
@@ -199,11 +201,11 @@ public class CommandHandler implements TabCompleter
                     {
                         args = fillDefaults(method, args, sender.getName());
                         if (method.isAnnotationPresent(Beta.class) && Marriage.plugin.getConfig().getBoolean("beta-testing"))
-                            Marriage.sendMessage(sender, method.getAnnotation(Beta.class).value());
+                            Marriage.plugin.sendMessage(sender, method.getAnnotation(Beta.class).value());
                         else if (method.isAnnotationPresent(Beta.class) && !Marriage.plugin.getConfig().getBoolean("beta-testing"))
                         {
-                            Marriage.sendMessage(sender, "&cEnable beta testing to get access to this command");
-                            Marriage.sendDebugInfo("Beta testing access only");
+                            Marriage.plugin.sendMessage(sender, "&cEnable beta testing to get access to this command");
+                            Marriage.plugin.sendDebugInfo("Beta testing access only");
                             return;
                         }
                         if (args.length == 0)
@@ -238,7 +240,7 @@ public class CommandHandler implements TabCompleter
             return;
         }
 
-        Marriage.sendDebugInfo("&c" + sender.getName() + " failed to invoke /" + arg);
+        Marriage.plugin.sendDebugInfo("&c" + sender.getName() + " failed to invoke /" + arg);
         showHelp(command, sender, 1);
     }
 
@@ -252,7 +254,7 @@ public class CommandHandler implements TabCompleter
         String com = command.getName();
         for (String string : args)
             com += " " + string;
-        Marriage.sendDebugInfo(commandSender.getName() + " invoked TabCompletion: &b" + com);
+        Marriage.plugin.sendDebugInfo(commandSender.getName() + " invoked TabCompletion: &b" + com);
 
         if (args.length == 0)
             return null;
@@ -302,7 +304,7 @@ public class CommandHandler implements TabCompleter
                             //Special tabs example: {gender} will return {"male", "female", "HIDDEN"}
                             if (isSpecial(cmdArgs[i]))
                             {
-                                Marriage.sendDebugInfo("Found a special tab: " + cmdArgs[i]);
+                                Marriage.plugin.sendDebugInfo("Found a special tab: " + cmdArgs[i]);
                                 List<String> possibleArgs = specialTabs(cmdArgs[i]);
                                 if (possibleArgs != null)
                                     if (!possibleArgs.contains(args[i]))
@@ -335,14 +337,14 @@ public class CommandHandler implements TabCompleter
         if (tabComplete.size() == 0)
         {
             tabComplete = null;
-            Marriage.sendDebugInfo("Found tab options: null");
+            Marriage.plugin.sendDebugInfo("Found tab options: null");
         }
         else
         {
             String tabs = "";
             for (String s1 : tabComplete)
                 tabs += " " + s1;
-            Marriage.sendDebugInfo("Found tab options: " + tabs);
+            Marriage.plugin.sendDebugInfo("Found tab options: " + tabs);
         }
 
         return tabComplete;

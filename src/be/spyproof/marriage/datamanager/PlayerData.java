@@ -2,7 +2,6 @@ package be.spyproof.marriage.datamanager;
 
 import be.spyproof.marriage.Gender;
 import be.spyproof.marriage.Status;
-import org.bukkit.ChatColor;
 
 /**
  * Created by Spyproof on 1/05/2015.
@@ -19,8 +18,10 @@ public class PlayerData
     private int homeX;
     private int homeY;
     private int homeZ;
+    private Long lastSeen;
+    private Double balance;
 
-    public PlayerData(String name, Gender gender, Status status, String partner, boolean trustsPartner, boolean homeSet, int homeX, int homeY, int homeZ)
+    public PlayerData(String name, Gender gender, Status status, String partner, boolean trustsPartner, boolean homeSet, int homeX, int homeY, int homeZ, Long lastSeen, Double balance)
     {
         this.name = name.toLowerCase();
         this.gender = gender;
@@ -32,6 +33,8 @@ public class PlayerData
         this.homeX = homeX;
         this.homeY = homeY;
         this.homeZ = homeZ;
+        this.lastSeen = lastSeen;
+        this.balance = balance;
     }
 
     /**
@@ -88,6 +91,16 @@ public class PlayerData
         return homeZ;
     }
 
+    public Long getLastSeen()
+    {
+        return lastSeen;
+    }
+
+    public Double getBalance()
+    {
+        return balance;
+    }
+
     /**
      * Setters
      */
@@ -135,5 +148,15 @@ public class PlayerData
     public void setHomeZ(int homeZ)
     {
         this.homeZ = homeZ;
+    }
+
+    public void setLastSeen(Long lastSeen)
+    {
+        this.lastSeen = lastSeen;
+    }
+
+    public void setBalance(Double balance)
+    {
+        this.balance = balance;
     }
 }
