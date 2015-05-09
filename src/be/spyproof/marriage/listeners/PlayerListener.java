@@ -2,9 +2,11 @@ package be.spyproof.marriage.listeners;
 
 import be.spyproof.marriage.Marriage;
 import be.spyproof.marriage.Messages;
+import be.spyproof.marriage.Permissions;
 import be.spyproof.marriage.Status;
 import be.spyproof.marriage.datamanager.PlayerManager;
 import com.dthielke.herochat.ChannelChatEvent;
+import com.earth2me.essentials.Essentials;
 import org.bukkit.ChatColor;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -13,6 +15,8 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.entity.Player;
+
+import java.util.List;
 
 /**
  * Created by Spyproof on 3/04/2015.
@@ -52,11 +56,11 @@ public class PlayerListener implements Listener
         String prefix = null;
 
         if (status.equals(Status.MARRIED_TO_PERSON))
-            prefix = "&d\u2665 &r";
+            prefix = "&d" + Messages.prefixMarried + " &r";
         else if (status.equals(Status.MARRIED_TO_LEFT_HAND))
-            prefix = "&d\u2666 &r";
+            prefix = "&d" + Messages.prefixLeftHand + " &r";
         else if (status.equals(Status.MARRIED_TO_RIGHT_HAND))
-            prefix = "&d\u2666 &r";
+            prefix = "&d" + Messages.prefixRightHand + " &r";
 
         if (prefix == null)
             prefix = "";
@@ -65,7 +69,7 @@ public class PlayerListener implements Listener
     }
 
     @EventHandler
-    public void onNormalChat(AsyncPlayerChatEvent e) //TODO socialspy
+    public void onNormalChat(AsyncPlayerChatEvent e)
     {
         if (e.isCancelled())
             return;
@@ -85,6 +89,29 @@ public class PlayerListener implements Listener
                         .replace("{receiver}", partner.getDisplayName()).replace("{message}", ChatColor.stripColor(e.getMessage()));
                 Marriage.sendMessage(e.getPlayer(), message);
                 Marriage.sendMessage(partner, message);
+
+                //Show the message on console
+                message = Messages.privateMessageSocialspy.replace("{sender}", e.getPlayer().getDisplayName())
+                        .replace("{receiver}", partner.getDisplayName()).replace("{message}", ChatColor.stripColor(e.getMessage()));
+                Marriage.sendMessage(Marriage.plugin.getServer().getConsoleSender(), message);
+
+                //If you have socialspy enabled in essentials
+                Essentials essentials = (Essentials) Marriage.plugin.getServer().getPluginManager().getPlugin("Essentials");
+                if (essentials != null)
+                    if (essentials.isEnabled())
+                    {
+                        List<Player> players = Marriage.getOnlinePlayers();
+                        for (Player p : players)
+                            if (essentials.getUser(p).isSocialSpyEnabled())
+                                Marriage.sendMessage(p, message);
+                        return;
+                    }
+
+                //If essentials is not enabled, check for my own permission
+                List<Player> players = Marriage.getOnlinePlayers();
+                for (Player p : players)
+                    if (Permissions.hasPerm(p, Permissions.adminSocialSpy))
+                        Marriage.sendMessage(p, message);
             }
         }
     }

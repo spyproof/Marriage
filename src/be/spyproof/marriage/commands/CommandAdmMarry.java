@@ -1,9 +1,12 @@
 package be.spyproof.marriage.commands;
 
 import be.spyproof.marriage.Marriage;
+import be.spyproof.marriage.Permissions;
+import be.spyproof.marriage.annotations.Beta;
 import be.spyproof.marriage.annotations.Command;
 import be.spyproof.marriage.annotations.Default;
 import be.spyproof.marriage.datamanager.PlayerManager;
+import com.earth2me.essentials.Essentials;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.PluginDescriptionFile;
@@ -14,21 +17,21 @@ import org.bukkit.plugin.PluginDescriptionFile;
  */
 public class CommandAdmMarry
 {
-    @Command(command = "admmarry", trigger = "reload", args = {}, playersOnly = false, permission = "marriage.admin.reload", desc = "Reload the player config", usage = "/admmarry reload")
+    @Command(command = "admmarry", trigger = "reload", args = {}, playersOnly = false, permission = Permissions.adminReload, desc = "Reload the player config", usage = "/admmarry reload")
     public void forceReload(CommandSender sender)
     {
         PlayerManager.reload();
         sender.sendMessage(ChatColor.DARK_GREEN + "Reloading player config... Loaded " + PlayerManager.getLoadedPlayers().size() + " players");
     }
 
-    @Command(command = "admmarry", trigger = "save", args = {}, playersOnly = false, permission = "marriage.admin.save", desc = "Save the config manually", usage = "/admmarry save")
+    @Command(command = "admmarry", trigger = "save", args = {}, playersOnly = false, permission = Permissions.adminSave, desc = "Save the config manually", usage = "/admmarry save")
     public void forceSave(CommandSender sender)
     {
         PlayerManager.saveAllPlayers();
         sender.sendMessage(ChatColor.DARK_GREEN + "Saved " + PlayerManager.getLoadedPlayers().size() + " players");
     }
 
-    @Command(command = "admmarry", trigger = "remove", args = {"{player}"}, playersOnly = false, permission = "marriage.admin.remove", desc = "Reset a player", usage = "/admmarry remove <player>")
+    @Command(command = "admmarry", trigger = "remove", args = {"{player}"}, playersOnly = false, permission = Permissions.adminRemove, desc = "Reset a player", usage = "/admmarry remove <player>")
     public void removePlayer(CommandSender sender, String player)
     {
         try{
@@ -47,7 +50,7 @@ public class CommandAdmMarry
     }
 
     @Default({"{player}"})
-    @Command(command = "admmarry", trigger = "info", args = {"{player}"}, playersOnly = false, permission = "marriage.admin.info", desc = "Get the player information", usage = "/admmarry info <player>")
+    @Command(command = "admmarry", trigger = "info", args = {"{player}"}, playersOnly = false, permission = Permissions.adminInfo, desc = "Get the player information", usage = "/admmarry info <player>")
     public void getPlayerInfo(CommandSender sender, String player)
     {
         String status, gender, partner;
@@ -87,7 +90,7 @@ public class CommandAdmMarry
         Marriage.toggleDebugger(sender.getName());
     }
 
-    @Command(command = "admmarry", trigger = "plugin", args = {}, playersOnly = false, permission = "marriage.admin.plugin", desc = "Get more info about the plugin", usage = "/admmarry plugin")
+    @Command(command = "admmarry", trigger = "plugin", args = {}, playersOnly = false, permission = Permissions.adminPlugin, desc = "Get more info about the plugin", usage = "/admmarry plugin")
     public void getPluginInfo(CommandSender sender)
     {
         PluginDescriptionFile description = Marriage.plugin.getDescription();
@@ -104,6 +107,19 @@ public class CommandAdmMarry
             Marriage.sendMessage(sender, "&eThe developer's website is &6&n" + description.getWebsite());
     }
 
-    //TODO clear cooldown?
+    @Command(command = "admmarry", trigger = "socialspy", args = {}, playersOnly = false, permission = Permissions.adminSocialSpy, desc = "See the partner chat", usage = "/admmarry socialspy")
+    public void socialspy(CommandSender sender)
+    {
+        Essentials essentials = (Essentials) Marriage.plugin.getServer().getPluginManager().getPlugin("Essentials");
+        if (essentials != null)
+            if (essentials.isEnabled())
+            {
+                Marriage.sendMessage(sender, "&eThis plugin is hooked into the socialspy of essentials");
+                return;
+            }
 
+        Marriage.sendMessage(sender, "&eSocial spy is enabled for you &o" + Permissions.adminSocialSpy);
+    }
+
+    //TODO clear cooldown?
 }

@@ -1,7 +1,7 @@
 package be.spyproof.marriage;
 
 /**
- * Created by Nils on 31/03/2015.
+ * Created by Spyproof on 31/03/2015.
  */
 
 import be.spyproof.marriage.commands.*;
@@ -11,6 +11,7 @@ import be.spyproof.marriage.datamanager.PlayerManager;
 import be.spyproof.marriage.listeners.PlayerListener;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.ChatColor;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.RegisteredServiceProvider;
@@ -36,7 +37,6 @@ public class Marriage extends JavaPlugin
 
     public static void toggleDebugger(String name)
     {
-        System.out.println(name);
         if (debuggers.contains(name))
             debuggers.remove(name);
         else
@@ -62,6 +62,17 @@ public class Marriage extends JavaPlugin
     public static Player getPlayer(String player)
     {
         return plugin.getServer().getPlayer(player);
+    }
+
+    public static List<Player> getOnlinePlayers()
+    {
+        List<World> worlds = plugin.getServer().getWorlds();
+        List<Player> players = new ArrayList<Player>();
+        for (World w : worlds)
+            for (Player p : w.getPlayers())
+                if (!players.contains(p))
+                    players.add(p);
+        return players;
     }
 
     public static void sendMessage(CommandSender sender, String message)

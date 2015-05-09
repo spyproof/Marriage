@@ -1,9 +1,6 @@
 package be.spyproof.marriage.commands;
 
-import be.spyproof.marriage.Gender;
-import be.spyproof.marriage.Marriage;
-import be.spyproof.marriage.Messages;
-import be.spyproof.marriage.Status;
+import be.spyproof.marriage.*;
 import be.spyproof.marriage.annotations.Command;
 import be.spyproof.marriage.datamanager.PlayerManager;
 import org.bukkit.Bukkit;
@@ -30,7 +27,7 @@ public class CommandMarry
 
     //TODO undo config messages?
 
-    @Command(command = "marry", trigger = "deny", args = {}, playersOnly = true, permission = "marriage.player.marry.other", desc = "Deny the marriage reuqest", usage = "/marry deny")
+    @Command(command = "marry", trigger = "deny", args = {}, playersOnly = true, permission = Permissions.playerMarryOther, desc = "Deny the marriage reuqest", usage = "/marry deny")
     public void DenyMarriage(CommandSender sender)
     {
         try{
@@ -46,7 +43,7 @@ public class CommandMarry
         }
     }
 
-    @Command(command = "marry", trigger = "accept", args = {}, playersOnly = true, permission = "marriage.player.marry.other", desc = "Accept the marriage request", usage = "/marry accept")
+    @Command(command = "marry", trigger = "accept", args = {}, playersOnly = true, permission = Permissions.playerMarryOther, desc = "Accept the marriage request", usage = "/marry accept")
     public void AcceptMarriage(Player sender)
     {
         //TODO add a timer
@@ -76,7 +73,8 @@ public class CommandMarry
 
 
 
-            String broadcast = Messages.broadcast.replace("{prefix}", Messages.prefix).replace("{player1}", sender.getName()).replace("{player2}", partner.getDisplayName());
+            String broadcast = Messages.broadcast.replace("{prefix}", Messages.prefix).replace("{player1}", sender
+                    .getName()).replace("{player2}", partner.getDisplayName());
             Bukkit.broadcastMessage(ChatColor.translateAlternateColorCodes('&', broadcast));
 
             Marriage.sendMessage(sender, "&eUse &6&l/partner&e for your new perks!");
@@ -88,7 +86,7 @@ public class CommandMarry
         }
     }
 
-    @Command(command = "marry", trigger = "{left}", args = {}, playersOnly = true, permission = "marriage.player.marry.self", helpHidden = true)
+    @Command(command = "marry", trigger = "{left}", args = {}, playersOnly = true, permission = Permissions.playerMarrySelf, helpHidden = true)
     public void MarryLeftHand(CommandSender sender)
     {
         if (PlayerManager.isMarried(sender.getName()))
@@ -104,7 +102,7 @@ public class CommandMarry
         Bukkit.broadcastMessage(ChatColor.translateAlternateColorCodes('&', broadcast));
     }
 
-    @Command(command = "marry", trigger = "{right}", args = {}, playersOnly = true, permission = "marriage.player.marry.self", helpHidden = true)
+    @Command(command = "marry", trigger = "{right}", args = {}, playersOnly = true, permission = Permissions.playerMarrySelf, helpHidden = true)
     public void MarryRightHand(CommandSender sender)
     {
         if (PlayerManager.isMarried(sender.getName()))
@@ -121,7 +119,7 @@ public class CommandMarry
 
     }
 
-    @Command(command = "marry", trigger = "player", args = {"{player}"}, playersOnly = true, permission = "marriage.player.marry.other", desc = "Send a marriage request to a player", usage = "/marry player <name>")
+    @Command(command = "marry", trigger = "player", args = {"{player}"}, playersOnly = true, permission = Permissions.playerMarryOther, desc = "Send a marriage request to a player", usage = "/marry player <name>")
     public void sendMarriageRequestPlayer(CommandSender sender, String receiverName)
     {
         if (PlayerManager.isMarried(sender.getName()))
@@ -158,7 +156,7 @@ public class CommandMarry
         }
     }
 
-    @Command(command = "marry", trigger = "divorce", args = {}, playersOnly = true, permission = "marriage.player.divorce", desc = "Divorce from your current partner", usage = "/marry divorce")
+    @Command(command = "marry", trigger = "divorce", args = {}, playersOnly = true, permission = Permissions.playerDivorce, desc = "Divorce from your current partner", usage = "/marry divorce")
     public void divorceCommand(CommandSender sender)
     {
         if (PlayerManager.isMarried(sender.getName()))
@@ -173,7 +171,7 @@ public class CommandMarry
         }
     }
 
-    @Command(command = "marry", trigger = "gender", args = {"{gender}"}, playersOnly = true, permission = "marriage.player.gender", desc = "Select your gender", usage = "/marry gender <male, female, hidden>")
+    @Command(command = "marry", trigger = "gender", args = {"{gender}"}, playersOnly = true, permission = Permissions.playerGender, desc = "Select your gender", usage = "/marry gender <male, female, hidden>")
     public void setGender(CommandSender sender, String genderString)
     {
         Gender gender = Gender.fromString(genderString);
@@ -185,7 +183,7 @@ public class CommandMarry
             Marriage.sendMessage(sender, "&cPossible genders are: male, female, hidden");
     }
 
-    @Command(command = "marry", trigger = "info", args = {"{player}"}, playersOnly = true, permission = "marriage.player.info", desc = "Get the player information", usage = "/marry info <player>")
+    @Command(command = "marry", trigger = "info", args = {"{player}"}, playersOnly = true, permission = Permissions.playerInfo, desc = "Get the player information", usage = "/marry info <player>")
     public void getPlayerInfo(CommandSender sender, String player)
     {
         String status, gender, partner;

@@ -3,6 +3,7 @@ package be.spyproof.marriage.commands;
 import be.spyproof.marriage.Gender;
 import be.spyproof.marriage.Marriage;
 import be.spyproof.marriage.Messages;
+import be.spyproof.marriage.Permissions;
 import be.spyproof.marriage.annotations.Beta;
 import be.spyproof.marriage.annotations.Command;
 import be.spyproof.marriage.annotations.Default;
@@ -89,7 +90,7 @@ public class CommandHandler implements TabCompleter
         List<String> help = new ArrayList<String>();
         for (Command cmdInfo: commandMap.keySet())
             //Only show help when: the command name is right & command is not hidden from the help menu & the sender has the permission
-            if (cmd.equalsIgnoreCase(cmdInfo.command()) && !cmdInfo.helpHidden() && hasPerm(sender, cmdInfo.permission()))
+            if (cmd.equalsIgnoreCase(cmdInfo.command()) && !cmdInfo.helpHidden() && Permissions.hasPerm(sender, cmdInfo.permission()))
                 //Only show the help menu if the sender is a player & if the command is player only
                 if (!(sender instanceof Player) && cmdInfo.playersOnly())
                 {
@@ -146,7 +147,7 @@ public class CommandHandler implements TabCompleter
                             return;
                         }else {
                             //Check for permissions
-                            if (hasPerm(sender, cmdInfo.permission()))
+                            if (Permissions.hasPerm(sender, cmdInfo.permission()))
                             {
                                 try {
                                     //Check if the command is in beta (has @beta)
@@ -261,10 +262,14 @@ public class CommandHandler implements TabCompleter
         {
             for (Command cmdInfo : commandMap.keySet())
             {
-                if (cmdInfo.command().equalsIgnoreCase(command.getName()) && hasPerm(commandSender, cmdInfo.permission()))
+                if (cmdInfo.command().equalsIgnoreCase(command.getName()) && Permissions.hasPerm(commandSender, cmdInfo.permission()))
                 {
                     if (isSpecial(cmdInfo.trigger()))
-                        tabComplete = addToList(tabComplete, specialTabs(cmdInfo.trigger()));
+                    {
+                        List<String> specials = specialTabs(cmdInfo.trigger());
+                        if (specials!=null)
+                            tabComplete.addAll(specials);
+                    }
                     else if (cmdInfo.trigger().startsWith(args[0].toLowerCase()))
                         tabComplete.add(cmdInfo.trigger());
                 }
@@ -283,7 +288,7 @@ public class CommandHandler implements TabCompleter
                 if (cmdInfo.args().length+1 >= args.length) //+1 for the trigger
                 {
                     //Check permission and if its the same command
-                    if (cmdInfo.command().equalsIgnoreCase(command.getName()) && hasPerm(commandSender, cmdInfo.permission()))
+                    if (cmdInfo.command().equalsIgnoreCase(command.getName()) && Permissions.hasPerm(commandSender, cmdInfo.permission()))
                     {
                         //cmdArgs = trigger + arguments behind the trigger
                         String[] cmdArgs = new String[cmdInfo.args().length+1];
@@ -371,28 +376,6 @@ public class CommandHandler implements TabCompleter
         return args;
     }
 
-    //Check for player permission
-    private boolean hasPerm(CommandSender sender, String perm)
-    {
-        if (sender.hasPermission(perm) || perm.equalsIgnoreCase("none") || sender.isOp())
-            return true;
-        else
-        {
-            //Check for wildcards -> perm needed = a.perm.1 -> player has a.perm.* -> return true
-            boolean go = perm.contains(".");
-            while (go)
-            {
-                perm = perm.replaceAll("\\.\\*$", "");
-                perm = perm.replaceAll("\\.\\w*$", ".*");
-                if (!perm.contains("."))
-                    go = false;
-                if (sender.hasPermission(perm) && go)
-                    return true;
-            }
-            return false;
-        }
-    }
-
     private boolean isSpecial(String arg)
     {
         return arg.startsWith("{") && arg.endsWith("}");
@@ -412,16 +395,6 @@ public class CommandHandler implements TabCompleter
         }
 
         return null;
-    }
-
-    //Merge 2 lists
-    private List<String> addToList(List<String> original, List<String> extra)
-    {
-        if (extra == null)
-            return original;
-        for (String s : extra)
-            original.add(s);
-        return original;
     }
 
     private Method getCommandMethod(String command, String trigger)
