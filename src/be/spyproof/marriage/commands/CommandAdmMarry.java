@@ -1,6 +1,7 @@
 package be.spyproof.marriage.commands;
 
 import be.spyproof.marriage.Marriage;
+import be.spyproof.marriage.Messages;
 import be.spyproof.marriage.Permissions;
 import be.spyproof.marriage.annotations.Command;
 import be.spyproof.marriage.annotations.Default;
@@ -46,7 +47,7 @@ public class CommandAdmMarry
             try {
                 String partner = playerManager.getPartner(player);
 
-                if(!partner.equals("") && !partner.isEmpty())
+                if(partner != null && !partner.equals("") && !partner.isEmpty())
                     CommandMarry.divorcePlayer(partner);
             } catch (IllegalArgumentException ignored) {}
 
@@ -64,6 +65,13 @@ public class CommandAdmMarry
         String status, gender, partner;
         boolean isHomeSet, trustsPartner;
         int x, y, z;
+
+    	if (playerManager.getStatus(player) == null)
+    	{   
+    		Marriage.plugin.sendMessage(sender, Messages.notOnline);
+    		return;
+    	}
+        
         try{
             status = playerManager.getStatus(player).toString();
             gender = playerManager.getGender(player).toString();

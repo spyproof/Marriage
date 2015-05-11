@@ -1,9 +1,11 @@
 cooldown: 5 # minutes
 beta-testing: true
 broadcast-prefix: '&b&l[&2&lMarriageEC&b&l]'
-MySQL:
-  host: localhost
-  port: 3306
-  user: userName
-  password: PlezDontHackMe
-  database: dbName
+server_name: default
+database: endercraft
+host: localhost
+port: 3306
+user: default
+password: default
+table: marriage
+servers_table: marriage_servers

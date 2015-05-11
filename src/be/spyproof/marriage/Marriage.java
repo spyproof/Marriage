@@ -32,7 +32,6 @@ public class Marriage extends JavaPlugin
     public static Marriage plugin;
     public static Economy eco;
 
-
     /**
      * public
      */
@@ -72,7 +71,7 @@ public class Marriage extends JavaPlugin
         return this.getServer().getPlayer(player);
     }
     
-    public static List<Player> getOnlinePlayers()
+    public List<Player> getOnlinePlayers()
     {
     	List<World> worlds = plugin.getServer().getWorlds();
     	List<Player> players = new ArrayList<Player>();
@@ -104,7 +103,8 @@ public class Marriage extends JavaPlugin
     @Override
     public void onEnable()
     {
-    	Marriage.plugin = this;
+    	plugin = this;
+    	this.saveDefaultConfig();
     	this.playerManager = new PlayerManager();
         this.playerListener = new PlayerListener();
         this.commandListener = new CommandListener();

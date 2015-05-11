@@ -56,6 +56,13 @@ public class CommandMarry
         }
 
         String newPartner = this.offers.get(sender.getName()); //newPartner = player who did /marry <player>
+        
+        if (newPartner == null)
+        {
+        	Marriage.plugin.sendMessage(sender, Messages.noProposal);
+        	return;
+        }
+        
         Player partner = Marriage.plugin.getPlayer(newPartner);
 
         if (playerManager.isMarried(newPartner))
@@ -175,7 +182,7 @@ public class CommandMarry
     @Command(command = "marry", trigger = "gender", args = {"{gender}"}, playersOnly = true, permission = Permissions.playerGender, desc = "Select your gender", usage = "/marry gender <male, female, hidden>")
     public void setGender(CommandSender sender, String genderString)
     {
-        Gender gender = PlayerManager.genderFromString(genderString);
+        Gender gender = Gender.fromString(genderString);
         if (gender != null)
         {
             playerManager.setGender(sender.getName(), gender);
@@ -188,6 +195,11 @@ public class CommandMarry
     public void getPlayerInfo(CommandSender sender, String player)
     {
         String status, gender, partner;
+    	if (playerManager.getStatus(player) == null)
+    	{   
+    		Marriage.plugin.sendMessage(sender, Messages.notOnline);
+    		return;
+    	}
         try{
             status = playerManager.getStatus(player).toString();
             gender = playerManager.getGender(player).toString();

@@ -18,10 +18,12 @@ public class PlayerData
     private int homeX;
     private int homeY;
     private int homeZ;
+    private Float homePitch;
+    private Float homeYaw;
     private Long lastSeen;
     private Double balance;
 
-    public PlayerData(String name, Gender gender, Status status, String partner, boolean trustsPartner, boolean homeSet, int homeX, int homeY, int homeZ, Long lastSeen, Double balance)
+    public PlayerData(String name, Gender gender, Status status, String partner, boolean trustsPartner, boolean homeSet, int homeX, int homeY, int homeZ, Float homePitch, Float homeYaw, Long lastSeen, Double balance)
     {
         this.name = name.toLowerCase();
         this.gender = gender;
@@ -33,6 +35,8 @@ public class PlayerData
         this.homeX = homeX;
         this.homeY = homeY;
         this.homeZ = homeZ;
+        this.homePitch = homePitch;
+        this.homeYaw = homeYaw;
         this.lastSeen = lastSeen;
         this.balance = balance;
     }
@@ -89,6 +93,16 @@ public class PlayerData
     public int getHomeZ()
     {
         return homeZ;
+    }
+
+    public Float getHomePitch()
+    {
+        return homePitch;
+    }
+
+    public Float getHomeYaw()
+    {
+        return homeYaw;
     }
 
     public Long getLastSeen()
@@ -148,6 +162,16 @@ public class PlayerData
     public void setHomeZ(int homeZ)
     {
         this.homeZ = homeZ;
+    }
+
+    public void setHomePitch(Float homePitch)
+    {
+        this.homePitch = homePitch;
+    }
+
+    public void setHomeYaw(Float homeYaw)
+    {
+        this.homeYaw = homeYaw;
     }
 
     public void setLastSeen(Long lastSeen)

@@ -25,4 +25,15 @@ public enum Status
     public String toString(){
         return name;
     }
+
+    public static Status fromString(String statusString) {
+        if (statusString != null) {
+            for (Status gender : Status.values()) {
+                if (gender.equalsName(statusString)) {
+                    return gender;
+                }
+            }
+        }
+        return Status.NOT_INTERESTED; // Default value
+    }
 }

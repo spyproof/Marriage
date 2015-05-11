@@ -101,7 +101,7 @@ public class PlayerListener implements Listener
                 if (essentials != null)
                     if (essentials.isEnabled())
                     {
-                        List<Player> players = Marriage.getOnlinePlayers();
+                        List<Player> players = Marriage.plugin.getOnlinePlayers();
                         for (Player p : players)
                             if (essentials.getUser(p).isSocialSpyEnabled())
                             	Marriage.plugin.sendMessage(p, message);
@@ -109,7 +109,7 @@ public class PlayerListener implements Listener
                     }
 
                 //If essentials is not enabled, check for my own permission
-                List<Player> players = Marriage.getOnlinePlayers();
+                List<Player> players = Marriage.plugin.getOnlinePlayers();
                 for (Player p : players)
                     if (Permissions.hasPerm(p, Permissions.adminSocialSpy))
                     	Marriage.plugin.sendMessage(p, message);
@@ -119,8 +119,6 @@ public class PlayerListener implements Listener
 
     private void playerDisconnected(Player player)
     {
-    	Marriage.plugin.getPlayerManager().unloadPlayer(player.getName());
-
         if (Marriage.plugin.getPlayerManager().getStatus(player.getName()).equals(Status.MARRIED_TO_PERSON))
         {
             Player partner = Marriage.plugin.getPlayer(Marriage.plugin.getPlayerManager().getPartner(player.getName()));
@@ -128,6 +126,6 @@ public class PlayerListener implements Listener
                 Marriage.plugin.sendMessage(partner, Messages.partnerDC.replace("{player}", player.getDisplayName()));
         }
 
-        Marriage.plugin.getPlayerManager().setLastOnline(player.getName(), System.currentTimeMillis());
+    	Marriage.plugin.getPlayerManager().unloadPlayer(player.getName());
     }
 }
