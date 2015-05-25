@@ -1,7 +1,7 @@
 name: MarriageEC
-version: 0.2-BETA
+version: 1.0
 description: Allows players to marry
-author: TPNils
+author: TPNils & Idlehumor
 website: https://github.com/spyproof
 main: be.spyproof.marriage.Marriage
 depend: [Vault, Herochat]

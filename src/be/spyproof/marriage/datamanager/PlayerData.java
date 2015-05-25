@@ -1,7 +1,11 @@
 package be.spyproof.marriage.datamanager;
 
 import be.spyproof.marriage.Gender;
+import be.spyproof.marriage.Marriage;
 import be.spyproof.marriage.Status;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.World;
 
 /**
  * Created by Spyproof on 1/05/2015.
@@ -15,15 +19,27 @@ public class PlayerData
     private boolean trustsPartner;
     private boolean homeSet;
     private boolean partnerChat;
-    private int homeX;
-    private int homeY;
-    private int homeZ;
-    private Float homePitch;
-    private Float homeYaw;
+    private Location location;
     private Long lastSeen;
     private Double balance;
 
-    public PlayerData(String name, Gender gender, Status status, String partner, boolean trustsPartner, boolean homeSet, int homeX, int homeY, int homeZ, Float homePitch, Float homeYaw, Long lastSeen, Double balance)
+    /**
+     * @param name
+     * @param gender
+     * @param status
+     * @param partner
+     * @param trustsPartner
+     * @param homeSet
+     * @param homeWorld
+     * @param homeX
+     * @param homeY
+     * @param homeZ
+     * @param homePitch
+     * @param homeYaw
+     * @param lastSeen
+     * @param balance
+     */
+    public PlayerData(String name, Gender gender, Status status, String partner, boolean trustsPartner, boolean homeSet, World homeWorld, int homeX, int homeY, int homeZ, Float homePitch, Float homeYaw, Long lastSeen, Double balance)
     {
         this.name = name.toLowerCase();
         this.gender = gender;
@@ -32,13 +48,39 @@ public class PlayerData
         this.trustsPartner = trustsPartner;
         this.partnerChat = false;
         this.homeSet = homeSet;
-        this.homeX = homeX;
-        this.homeY = homeY;
-        this.homeZ = homeZ;
-        this.homePitch = homePitch;
-        this.homeYaw = homeYaw;
+        if (homeWorld == null)
+            homeWorld = Bukkit.getWorld("world");
+        this.location = new Location(homeWorld, homeX, homeY, homeZ, homeYaw, homePitch);
         this.lastSeen = lastSeen;
         this.balance = balance;
+    }
+
+    /**
+     * @param name
+     * @param gender
+     * @param status
+     * @param partner
+     * @param trustsPartner
+     * @param homeSet
+     * @param location
+     * @param lastSeen
+     * @param balance
+     */
+    public PlayerData(String name, Gender gender, Status status, String partner, boolean trustsPartner, boolean homeSet, Location location, Long lastSeen, Double balance)
+    {
+        this.name = name;
+        this.gender = gender;
+        this.status = status;
+        this.partner = partner;
+        this.trustsPartner = trustsPartner;
+        this.homeSet = homeSet;
+        this.partnerChat = false;
+        this.location = location;
+        this.lastSeen = lastSeen;
+        this.balance = balance;
+
+        if (this.location == null)
+            this.location = new Location(Marriage.plugin.getServer().getWorld("world"), 0, 0, 0, 0F, 0F);
     }
 
     /**
@@ -80,29 +122,9 @@ public class PlayerData
         return homeSet;
     }
 
-    public int getHomeX()
+    public Location getHomeLoc()
     {
-        return homeX;
-    }
-
-    public int getHomeY()
-    {
-        return homeY;
-    }
-
-    public int getHomeZ()
-    {
-        return homeZ;
-    }
-
-    public Float getHomePitch()
-    {
-        return homePitch;
-    }
-
-    public Float getHomeYaw()
-    {
-        return homeYaw;
+        return location;
     }
 
     public Long getLastSeen()
@@ -149,29 +171,12 @@ public class PlayerData
         this.homeSet = homeSet;
     }
 
-    public void setHomeX(int homeX)
+    public void setHomeLocation(Location location)
     {
-        this.homeX = homeX;
-    }
-
-    public void setHomeY(int homeY)
-    {
-        this.homeY = homeY;
-    }
-
-    public void setHomeZ(int homeZ)
-    {
-        this.homeZ = homeZ;
-    }
-
-    public void setHomePitch(Float homePitch)
-    {
-        this.homePitch = homePitch;
-    }
-
-    public void setHomeYaw(Float homeYaw)
-    {
-        this.homeYaw = homeYaw;
+        if (location == null)
+            this.location = new Location(Marriage.plugin.getServer().getWorld("world"), 0, 0, 0, 0F, 0F);
+        else
+            this.location = location;
     }
 
     public void setLastSeen(Long lastSeen)

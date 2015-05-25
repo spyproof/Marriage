@@ -88,6 +88,7 @@ public class PlayerListener implements Listener
             {
                 String message = Messages.privateMessage.replace("{sender}", e.getPlayer().getDisplayName())
                         .replace("{receiver}", partner.getDisplayName()).replace("{message}", ChatColor.stripColor(e.getMessage()));
+                message = message.replaceAll("&[klmno]", "");
                 Marriage.plugin.sendMessage(e.getPlayer(), message);
                 Marriage.plugin.sendMessage(partner, message);
 
@@ -126,6 +127,7 @@ public class PlayerListener implements Listener
                 Marriage.plugin.sendMessage(partner, Messages.partnerDC.replace("{player}", player.getDisplayName()));
         }
 
+        Marriage.plugin.getPlayerManager().setLastOnline(player.getName().toLowerCase(), System.currentTimeMillis());
     	Marriage.plugin.getPlayerManager().unloadPlayer(player.getName());
     }
 }

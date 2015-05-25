@@ -1,15 +1,17 @@
 package be.spyproof.marriage.commands;
 
 import be.spyproof.marriage.Marriage;
-import be.spyproof.marriage.Messages;
 import be.spyproof.marriage.Permissions;
+import be.spyproof.marriage.Status;
 import be.spyproof.marriage.annotations.Command;
 import be.spyproof.marriage.annotations.Default;
+import be.spyproof.marriage.datamanager.CooldownManager;
 import be.spyproof.marriage.datamanager.PlayerManager;
 
 import com.earth2me.essentials.Essentials;
 
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.PluginDescriptionFile;
 
@@ -47,7 +49,7 @@ public class CommandAdmMarry
             try {
                 String partner = playerManager.getPartner(player);
 
-                if(partner != null && !partner.equals("") && !partner.isEmpty())
+                if(!partner.equals("") && !partner.isEmpty())
                     CommandMarry.divorcePlayer(partner);
             } catch (IllegalArgumentException ignored) {}
 
@@ -64,32 +66,31 @@ public class CommandAdmMarry
     {
         String status, gender, partner;
         boolean isHomeSet, trustsPartner;
-        int x, y, z;
-
-    	if (playerManager.getStatus(player) == null)
-    	{   
-    		Marriage.plugin.sendMessage(sender, Messages.notOnline);
-    		return;
-    	}
-        
+        double balance;
+        Location l;
         try{
             status = playerManager.getStatus(player).toString();
             gender = playerManager.getGender(player).toString();
             partner = playerManager.getPartner(player);
+            balance = playerManager.getBalance(player);
             isHomeSet = playerManager.isHomeSet(player);
             trustsPartner = playerManager.trustsPartner(player);
-            x = playerManager.getHomeX(player);
-            y = playerManager.getHomeY(player);
-            z = playerManager.getHomeZ(player);
+            l = playerManager.getHomeLoc(player);
 
             Marriage.plugin.sendMessage(sender, "&e------------&6&l" + player + "&e------------");
 
             Marriage.plugin.sendMessage(sender, "&6Gender: &e" + gender);
             Marriage.plugin.sendMessage(sender, "&6Status: &e" + status);
+
+            /*if (!playerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))
+                return;*/
+
             Marriage.plugin.sendMessage(sender, "&6Partner: &e" + partner);
+            Marriage.plugin.sendMessage(sender, "&6Balance: &e$" + balance);
+
             Marriage.plugin.sendMessage(sender, "&6Allow open inv: " + ChatColor.YELLOW + trustsPartner);
             if(isHomeSet)
-                Marriage.plugin.sendMessage(sender, "&6Home: &eX:" + x + "  Y:" + y + "  Z:" + z);
+                Marriage.plugin.sendMessage(sender, "&6Home: &eWorld: " + l.getWorld().getName() + "  X:" + l.getBlockX() + "  Y:" + l.getBlockY() + "  Z:" + l.getBlockZ());
             else
                 Marriage.plugin.sendMessage(sender, "&6Home: &eHome is not set");
         }catch (IllegalArgumentException e){
@@ -136,6 +137,11 @@ public class CommandAdmMarry
      
     	Marriage.plugin.sendMessage(sender, "&eSocial spy is enabled for you &o" + Permissions.adminSocialSpy);
     }
-    
-    //TODO clear cooldown?
+
+    @Command(command = "admmarry", trigger = "cooldown", args = {"{player}"}, playersOnly = false, permission = Permissions.adminResetCooldown, desc = "Reset the player's cooldown", usage = "/admmarry cooldown <player>")
+    public void clearCooldown(CommandSender sender, String player)
+    {
+        CooldownManager.cooldownManager.removeCooldown(player, "all");
+        Marriage.plugin.sendMessage(sender, "&eYou have reset the cooldowns of " + player);
+    }
 }

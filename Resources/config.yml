@@ -1,11 +1,28 @@
-cooldown: 5 # minutes
-beta-testing: true
+cooldown:
+  # The cooldown to send marriage requests
+  request: 5 # minutes
+
+  # The cooldown to marry again after a divorce
+  divorce: 60 # minutes
+
+# How much a marriage should cost, this will only be withdrawn when the other person accepts the request
+# Do not change!
+marriage-cost: 10000
+
+# Some commands are not fully tested and may have bugs. Disable them by setting this to false
+beta-testing: false
+
+# The prefix for the broadcast when people marry
 broadcast-prefix: '&b&l[&2&lMarriageEC&b&l]'
+
+# Homes, shared money and last seen are linked per server name
 server_name: default
-database: endercraft
+
+# MySQL
+database: DBname
 host: localhost
 port: 3306
-user: default
-password: default
+user: pi
+password: myUberPass
 table: marriage
 servers_table: marriage_servers

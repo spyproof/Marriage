@@ -3,12 +3,18 @@ package be.spyproof.marriage.datamanager;
 import be.spyproof.marriage.Marriage;
 import be.spyproof.marriage.Gender;
 import be.spyproof.marriage.Status;
+import org.bukkit.Bukkit;
+import org.bukkit.World;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+
+/**
+ * Created by Idlehumor
+ */
 
 public class DatabaseHandler {
     private String host = "";
@@ -49,32 +55,30 @@ public class DatabaseHandler {
     	this.table = Marriage.plugin.getConfig().getString("table");
     	this.serversTable = Marriage.plugin.getConfig().getString("servers_table");
     	this.serverName = Marriage.plugin.getConfig().getString("server_name");
-    	if (this.port != null && !this.port.equals(""))
-    	{
+    	if (this.port != null && !this.port.equals("")) {
     		this.port = ":"+this.port;
     	}
-    	else
-    	{
+    	else {
     		this.port = "";
     	}
     	this.connectionString = "jdbc:mysql://"+this.host+this.port+"/"+this.database;
     	this.selectPlayerString = "SELECT * FROM "+table+" WHERE name = ?";
-    	this.selectPlayerDataString = "SELECT "+table+".name, gender, status, partner, trusts_partner, server, home_set, home_x, home_y, home_z, home_pitch, home_yaw, last_seen, balance FROM "+table+","+serversTable+" WHERE "+table+".name = ? AND "+serversTable+".server = ? GROUP BY "+table+".name";
+    	this.selectPlayerDataString = "SELECT "+table+".name, gender, status, partner, trusts_partner, server, home_set, home_world, home_x, home_y, home_z, home_pitch, home_yaw, last_seen, balance FROM "+table+","+serversTable+" WHERE "+table+".name = ? AND "+serversTable+".server = ? GROUP BY "+table+".name";
     	this.selectPlayerServerString = "SELECT * FROM "+serversTable+" WHERE name = ? AND server = ?";
     	this.insertPlayerString = "INSERT INTO "+table+" SET name = ?, gender = ?, status = ?, partner = ?, trusts_partner = ?";
-    	this.insertPlayerServerString = "INSERT INTO "+serversTable+" SET name = ?, server = ?, home_set = ?, home_x = ?, home_y = ?, home_z = ?, home_pitch = ?, home_yaw = ?, last_seen = ?, balance = ?";
+    	this.insertPlayerServerString = "INSERT INTO "+serversTable+" SET name = ?, server = ?, home_set = ?, home_world = ?, home_x = ?, home_y = ?, home_z = ?, home_pitch = ?, home_yaw = ?, last_seen = ?, balance = ?";
     	this.updatePlayerString = "UPDATE "+table+" SET gender = ?, status = ?, partner = ?, trusts_partner = ? WHERE name = ?";
-    	this.updatePlayerServerString = "UPDATE "+serversTable+" SET home_set = ?, home_x = ?, home_y = ?, home_z = ?, home_pitch = ?, home_yaw = ?, last_seen = ?, balance = ? WHERE name = ? AND server = ?";
+    	this.updatePlayerServerString = "UPDATE "+serversTable+" SET home_set = ?, home_world = ?, home_x = ?, home_y = ?, home_z = ?, home_pitch = ?, home_yaw = ?, last_seen = ?, balance = ? WHERE name = ? AND server = ?";
     	this.deletePlayerString = "DELETE FROM "+table+" WHERE name = ?";
     	this.deletePlayerServerString = "DELETE FROM "+serversTable+" WHERE name = ? AND server = ?";
     	
 		try {
-			connection = DriverManager.getConnection(connectionString, user, password);
+            connection = DriverManager.getConnection(connectionString, user, password);
 			PreparedStatement prepStatement = connection.prepareStatement(
 				"CREATE TABLE IF NOT EXISTS "+table+
 				"(name VARCHAR(32),"+
 				"gender VARCHAR(16),"+
-				"status VARCHAR(16),"+
+				"status VARCHAR(32),"+
 				"partner VARCHAR(32),"+
 				"trusts_partner BOOLEAN,"+
 				"PRIMARY KEY (name))");
@@ -84,34 +88,40 @@ public class DatabaseHandler {
 	            "(name VARCHAR(32) NOT NULL,"+
 	            "server VARCHAR(64),"+
 	            "home_set BOOLEAN,"+
+                "home_world VARCHAR(32),"+
 	            "home_x INTEGER,"+
 	            "home_y INTEGER,"+
 	            "home_z INTEGER,"+
 	            "home_pitch FLOAT,"+
 	            "home_yaw FLOAT,"+
 	            "last_seen LONG,"+
-	            "balance DOUBLE)");
+	            "balance DOUBLE,"+
+		        "PRIMARY KEY (name))");
 			prepStatement.executeUpdate();
-
-			try {
-				connection.close();
-			} catch (SQLException e) {}
 		}
-		catch (SQLException e)
-		{
+		catch (SQLException e) {
 			e.printStackTrace();
 		}    	
 	}
 
+    public void closeDB()
+    {
+        if (connection != null)
+            try {
+                if (!connection.isClosed())
+                    connection.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+    }
+
 	public void savePlayer(PlayerData player)
 	{
 		PlayerData p = getPlayer(player.getName());
-		if (p != null)
-		{
+		if (p != null) {
 			updatePlayer(player);
 		}
-		else
-		{
+		else {
 			insertPlayer(player);
 		}
 	}
@@ -147,8 +157,10 @@ public class DatabaseHandler {
 		finally
 		{
 			try {
-				data.close();
-				connection.close();
+				if (data != null)
+				{
+					data.close();
+				}
 			} catch (SQLException e) { e.printStackTrace(); }
 		}
 		
@@ -157,22 +169,31 @@ public class DatabaseHandler {
 		try {
 			if (data == null || !data.next())
 			{
+
 				Object[] temp2 = {
 						player.getName().toLowerCase(),
 						this.serverName,
 						player.isHomeSet(),
-						player.getHomeX(),
-						player.getHomeY(),
-						player.getHomeZ(),
-						player.getHomePitch(),
-						player.getHomeYaw(),
+                        player.getHomeLoc().getWorld() == null ? "world" : player.getHomeLoc().getWorld().getName(),
+						player.getHomeLoc().getBlockX(),
+						player.getHomeLoc().getBlockY(),
+						player.getHomeLoc().getBlockZ(),
+						player.getHomeLoc().getPitch(),
+						player.getHomeLoc().getYaw(),
 						player.getLastSeen(),
 						player.getBalance()};
 				executeQuery(insertPlayerServerString, temp2);
 			}
-		data.close();
-		connection.close();
 		} catch (SQLException e) { e.printStackTrace(); }
+		finally
+		{
+			try {
+				if (data != null)
+				{
+					data.close();
+				}
+			} catch (SQLException e) { e.printStackTrace(); }
+		}
 		
 	}
 	
@@ -185,14 +206,15 @@ public class DatabaseHandler {
 				player.trustsPartner(),
 				player.getName().toLowerCase()};
 		executeQuery(updatePlayerString, temp);
-		
+
 		Object[] temp2 = {
 				player.isHomeSet(),
-				player.getHomeX(),
-				player.getHomeY(),
-				player.getHomeZ(),
-				player.getHomePitch(),
-				player.getHomeYaw(),
+                player.getHomeLoc().getWorld() == null ? "world" : player.getHomeLoc().getWorld().getName(),
+				player.getHomeLoc().getBlockX(),
+				player.getHomeLoc().getBlockY(),
+				player.getHomeLoc().getBlockZ(),
+				player.getHomeLoc().getPitch(),
+				player.getHomeLoc().getYaw(),
 				player.getLastSeen(),
 				player.getBalance(),
 				player.getName().toLowerCase(),
@@ -213,7 +235,8 @@ public class DatabaseHandler {
 						Status.fromString(data.getString("status")), 
 						data.getString("partner"), 
 						data.getBoolean("trusts_partner"), 
-						data.getBoolean("home_set"), 
+						data.getBoolean("home_set"),
+                        Bukkit.getWorld(data.getString("home_world")),
 						data.getInt("home_x"), 
 						data.getInt("home_y"), 
 						data.getInt("home_z"),
@@ -228,11 +251,9 @@ public class DatabaseHandler {
 		finally
 		{
 			try {
-				if (data != null)
-				{
+				if (data != null) {
 					data.close();
 				}
-				connection.close();
 			} catch (SQLException e) { e.printStackTrace(); }
 		}
 		return null;
@@ -241,7 +262,6 @@ public class DatabaseHandler {
 	private ResultSet executeQuery(String query, Object[] args)
 	{
 		try {
-			connection = DriverManager.getConnection(connectionString, user, password);
 			PreparedStatement prepStatement = connection.prepareStatement(query);
 			for (int i = 0; i < args.length; i++)
 			{
@@ -270,6 +290,8 @@ public class DatabaseHandler {
 					prepStatement.setFloat(i+1, (Float)args[i]);
 				}
 			}
+
+            Marriage.plugin.sendDebugInfo(prepStatement.toString());
 			
 			ResultSet data;
 			if (query.equals(selectPlayerString) || query.equals(selectPlayerDataString) || query.equals(selectPlayerServerString))
@@ -280,9 +302,6 @@ public class DatabaseHandler {
 			{
 				prepStatement.executeUpdate();
 				data = null;
-				try {
-					connection.close();
-				} catch (SQLException e) { e.printStackTrace(); }
 			}
 			
 			return data;

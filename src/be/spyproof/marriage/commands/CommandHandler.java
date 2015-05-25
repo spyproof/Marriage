@@ -134,12 +134,12 @@ public class CommandHandler implements TabCompleter
             if (cmdInfo != null)
             {
                 //if the commands match "/command1" ?= "/command2" TODO remove this?
-                if (cmdInfo.command().equalsIgnoreCase(command))
+                //if (cmdInfo.command().equalsIgnoreCase(command))
                 {
                     //Fill defaults based on @Default (does not overwrite)
-                    args = fillDefaults(method, args, sender.getName());
+                    String[] newArgs = fillDefaults(method, args, sender.getName());
                     //Check if the argument amount are the same
-                    if (args.length == cmdInfo.args().length)
+                    if (newArgs.length == cmdInfo.args().length)
                     {
                         //Check if its player only
                         if (!(sender instanceof Player) && cmdInfo.playersOnly())
@@ -157,19 +157,18 @@ public class CommandHandler implements TabCompleter
                                         Marriage.plugin.sendMessage(sender, method.getAnnotation(Beta.class).value());
                                     else if (method.isAnnotationPresent(Beta.class) && !Marriage.plugin.getConfig().getBoolean("beta-testing"))
                                     {
-                                        Marriage.plugin.sendMessage(sender, "&cEnable beta testing to get access to this " +
-                                                "command");
+                                        Marriage.plugin.sendMessage(sender, "&cEnable beta testing to get access to this command");
                                         Marriage.plugin.sendDebugInfo("Beta testing access only");
                                         return;
                                     }
 
                                     //Try to execute the command
-                                    if (args.length == 0)
+                                    if (newArgs.length == 0)
                                         method.invoke(instances.get(method), sender);
-                                    else if (args.length == 1)
-                                        method.invoke(instances.get(method), sender, args[0]);
+                                    else if (newArgs.length == 1)
+                                        method.invoke(instances.get(method), sender, newArgs[0]);
                                     else
-                                        method.invoke(instances.get(method), sender, args);
+                                        method.invoke(instances.get(method), sender, newArgs);
                                     Marriage.plugin.sendDebugInfo(sender.getName() + " successfully invoked the command!");
                                 } catch (IllegalAccessException e) {
                                     e.printStackTrace();
@@ -192,56 +191,23 @@ public class CommandHandler implements TabCompleter
         //If the command has a trigger "help", it will override the default help page
         if (trigger.equalsIgnoreCase(""))
         {
-            //Check for an overwriting help trigger
-            for (Command cmd : commandMap.keySet())
-            {
-                method = commandMap.get(cmd);
-                if (cmd.trigger().equalsIgnoreCase("help") && cmd.command().equalsIgnoreCase(command))
-                    try
-                    {
-                        args = fillDefaults(method, args, sender.getName());
-                        if (method.isAnnotationPresent(Beta.class) && Marriage.plugin.getConfig().getBoolean("beta-testing"))
-                            Marriage.plugin.sendMessage(sender, method.getAnnotation(Beta.class).value());
-                        else if (method.isAnnotationPresent(Beta.class) && !Marriage.plugin.getConfig().getBoolean("beta-testing"))
-                        {
-                            Marriage.plugin.sendMessage(sender, "&cEnable beta testing to get access to this command");
-                            Marriage.plugin.sendDebugInfo("Beta testing access only");
-                            return;
-                        }
-                        if (args.length == 0)
-                            method.invoke(instances.get(method), sender);
-                        else if (args.length == 1)
-                            method.invoke(instances.get(method), sender, args[0]);
-                        else
-                            method.invoke(instances.get(method), sender, args);
-                        return;
-                    } catch (IllegalAccessException e)
-                    {
-                        e.printStackTrace();
-                    } catch (InvocationTargetException e)
-                    {
-                        e.printStackTrace();
-                    }
-            }
-
-            //Get the page number for the default help message
-            int page = 1;
-
-            if (args != null)
-                if (args.length != 0)
-                    try {
-                        page = Integer.parseInt(args[0]);
-                    } catch (NumberFormatException e) {
-                        page = 1;
-                    }
-
-            //Show the default help message
-            showHelp(command, sender, page);
+            callCommand(command, "help", sender, args);
             return;
         }
 
+        //Get the page number for the default help message
+        int page = 1;
+
+        if (args != null)
+            if (args.length != 0)
+                try {
+                    page = Integer.parseInt(args[0]);
+                } catch (NumberFormatException e) {
+                    page = 1;
+                }
+
         Marriage.plugin.sendDebugInfo("&c" + sender.getName() + " failed to invoke /" + arg);
-        showHelp(command, sender, 1);
+        showHelp(command, sender, page);
     }
 
     @Override
@@ -354,7 +320,7 @@ public class CommandHandler implements TabCompleter
      * Private stuff
      */
 
-    //Fills the missing arguments if @Default(values) is peresnt
+    //Fills the missing arguments if @Default(values) is present
     private String[] fillDefaults(Method method, String[] args, String name)
     {
         if (method.isAnnotationPresent(Default.class) && method.isAnnotationPresent(Command.class))

@@ -9,8 +9,7 @@ import be.spyproof.marriage.datamanager.PlayerManager;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.command.CommandSender;
-
-//import java.util.Date;
+import org.bukkit.inventory.Inventory;
 
 /**
  * Created by Spyproof on 5/05/2015.
@@ -24,7 +23,7 @@ public class CommandPartner
     {
     	this.playerManager = Marriage.plugin.getPlayerManager();
     }
-    
+
     @Command(command = "partner", trigger = "info", args = {}, playersOnly = true, permission = Permissions.partnerInfo, desc = "Check on your partner", usage = "/partner info")
     public void getPartnerName(CommandSender sender)
     {
@@ -34,8 +33,14 @@ public class CommandPartner
         {
             String partnerName = playerManager.getPartner(sender.getName());
             Player partner = Marriage.plugin.getPlayer(partnerName);
-            Marriage.plugin.sendMessage(sender, "&eYou are married to &6" + partnerName + "&e and is " + (partner == null ? "&cfffline" : "&aonline"));
-            //TODO home location + balance
+            Marriage.plugin.sendMessage(sender, "&eYou are married to &6" + partnerName + "&e and is " + (partner == null ? "&coffline" : "&aonline"));
+            if(playerManager.isHomeSet(sender.getName()))
+            {
+                Location l = playerManager.getHomeLoc(sender.getName());
+                Marriage.plugin.sendMessage(sender, "&6Home: &eWorld: " + l.getWorld().getName() + "  X:" + l.getBlockX() + "  Y:" + l.getBlockY() + "  Z:" + l.getBlockZ());
+            }
+            else
+                Marriage.plugin.sendMessage(sender, "&6Home: &eHome is not set");
             Marriage.plugin.sendMessage(sender, "&eYou are &6" + (playerManager.trustsPartner(partnerName) ? "allowed" : "not allowed") + "&e to open " + (playerManager.getGender(partnerName).equals(Gender.FEMALE) ? "her" : "his") + " inventory");
         }
         else if (status.equals(Status.MARRIED_TO_LEFT_HAND))
@@ -46,8 +51,7 @@ public class CommandPartner
             Marriage.plugin.sendMessage(sender, Messages.notMarried);
     }
 
-    @Beta
-    @Command(command = "partner", trigger = "seen", args = {}, playersOnly = true, permission = Permissions.partnerSeen, desc = "Last time your partner was online", usage = "/partner seen", helpHidden = true)
+    @Command(command = "partner", trigger = "seen", args = {}, playersOnly = true, permission = Permissions.partnerSeen, desc = "Last time your partner was online", usage = "/partner seen")
     public void lastSeenPartner(CommandSender sender)
     {
         if (!playerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))
@@ -62,30 +66,10 @@ public class CommandPartner
         {
             Marriage.plugin.sendMessage(sender, "&e" + partnerName + "&e is &aonline");
         }else{
-            long timeDiff = (System.currentTimeMillis() - playerManager.getLastOnline(partnerName)) / 1000;
-            int seconds = (int)timeDiff%60;
-            timeDiff = timeDiff / 60;
-            int minutes = (int)timeDiff%60;
-            timeDiff = timeDiff / 60;
-            int hours = (int)timeDiff%24;
-            timeDiff = timeDiff / 24;
-            int days = (int)timeDiff;
 
-            //Last seen formatting
-            if (days > 7)
-            {
-                String message = Messages.lastSeenOver7Days.replace("{days}", days + "");
-                Marriage.plugin.sendMessage(sender, message);
-            }
-            else if (days > 0)
-            {
-                String message = Messages.lastSeenOver1Day.replace("{days}", days + "").replace("{hours}", hours + "");
-                Marriage.plugin.sendMessage(sender, message);
-            }else{
-                String message = Messages.lastSeen.replace("{hours}", hours + "").replace("{minutes}", minutes + "")
-                        .replace("{seconds}", seconds + "");
-                Marriage.plugin.sendMessage(sender, message);
-            }
+            long timeDiff = (System.currentTimeMillis() - playerManager.getLastOnline(partnerName)) / 1000;
+            Marriage.plugin.sendDebugInfo("" + System.currentTimeMillis() + " - " + playerManager.getLastOnline(partnerName) + " / 1000 = " + timeDiff);
+            Marriage.plugin.sendMessage(sender, Messages.lastSeen.replace("{time}", Messages.timeformat(timeDiff)));
         }
     }
 
@@ -139,8 +123,7 @@ public class CommandPartner
         Marriage.plugin.sendMessage(partner, "&e" + sender.getDisplayName() + " &eteleported to you");
     }
 
-    @Beta
-    @Command(command = "partner", trigger = "sethome", args = {}, playersOnly = true, permission = Permissions.partnerHome, desc = "Set the home location", usage = "/partner sethome", helpHidden = true)
+    @Command(command = "partner", trigger = "sethome", args = {}, playersOnly = true, permission = Permissions.partnerHome, desc = "Set the home location", usage = "/partner sethome")
     public void setHome(Player sender)
     {
         if (!playerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))
@@ -150,13 +133,16 @@ public class CommandPartner
         }
 
         Location l = sender.getLocation();
-        playerManager.setHome(sender.getName(), l);
-        Marriage.plugin.sendMessage(sender, "&1Not implemented yet");
+        this.playerManager.setHome(sender.getName(), l);
+        Marriage.plugin.sendMessage(sender, "&aYour home has been set!");
+        Player partner = Marriage.plugin.getPlayer(this.playerManager.getPartner(sender.getName()));
+        if (partner != null)
+            Marriage.plugin.sendMessage(partner, "&aYour home has been changed by your partner!");
+
     }
 
-    @Beta
-    @Command(command = "partner", trigger = "home", args = {}, playersOnly = true, permission = Permissions.partnerHome, desc = "Go to your home location", usage = "/partner home", helpHidden = true)
-    public void goHome(CommandSender sender)
+    @Command(command = "partner", trigger = "home", args = {}, playersOnly = true, permission = Permissions.partnerHome, desc = "Go to your home location", usage = "/partner home")
+    public void goHome(Player sender)
     {
         if (!playerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))
         {
@@ -164,22 +150,42 @@ public class CommandPartner
             return;
         }
 
-        Marriage.plugin.sendMessage(sender, "&1Not implemented yet");
+        //TODO check for pvp stuff
+        Location l = playerManager.getHomeLoc(sender.getName());
+        sender.teleport(l);
+        Marriage.plugin.sendMessage(sender, "&eYou have been teleported to your home");
     }
 
     @Beta
-    @Command(command = "partner", trigger = "inv", args = {}, playersOnly = true, permission = Permissions.partnerInventory, desc = "Open your partner's inventory", usage = "/partner inv", helpHidden = true)
-    public void openInventory(CommandSender sender)
+    @Command(command = "partner", trigger = "inv", args = {}, playersOnly = true, permission = Permissions.partnerInventory, desc = "Open your partner's inventory", usage = "/partner inv")
+    public void openInventory(Player sender)
     {
-        if (!playerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))
+        /*if (!playerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))
         {
             Marriage.plugin.sendMessage(sender, Messages.notMarriedToPlayer);
+            return; //TODO check if he trusts the inv
+        }
+
+        String partnerName = Marriage.plugin.getPlayerManager().getPartner(sender.getName());
+        Player partner = Marriage.plugin.getPlayer(partnerName);
+        if (partner == null)
+        {
+            Marriage.plugin.sendMessage(sender, Messages.notOnline.replace("{player}", partnerName));
+            return;
+        }*/
+
+        Player partner = Marriage.plugin.getPlayer(playerManager.getPartner(sender.getName()));
+        if (partner == null)
+        {
+            Marriage.plugin.sendMessage(sender, Messages.notOnline.replace("{player}", playerManager.getPartner(sender.getName())));
             return;
         }
 
-        Marriage.plugin.sendMessage(sender, "&1Not implemented yet");
+        Inventory inv = partner.getInventory();
+        sender.openInventory(inv);
     }
 
+    @Beta
     @Command(command = "partner", trigger = "trustinv", args = {}, playersOnly = true, permission = Permissions.partnerInventory, desc = "Let's your partner open your inventory", usage = "/partner trustinv")
     public void trustInventory(CommandSender sender)
     {
@@ -204,18 +210,98 @@ public class CommandPartner
         }
     }
 
-    @Beta
-    @Default({"1"})
-    @Command(command = "partner", trigger = "help", args = {"{int}"}, playersOnly = true, helpHidden = true)
-    public void help(CommandSender sender, String pageNr)
+    @Command(command = "partner", trigger = "deposit", args = {"{int}"}, playersOnly = true, permission = Permissions.partnerMoney, desc = "Add money to your shared bank", usage = "/partner deposit <money>")
+    public void moneyAdd(Player sender, String moneyString)
     {
-        int page;
-        try {
-            page = Integer.parseInt(pageNr);
-        } catch (NumberFormatException e) {
-            page = 1;
+        if (!playerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))
+        {
+            Marriage.plugin.sendMessage(sender, Messages.notMarriedToPlayer);
+            return;
         }
 
-        CommandHandler.getCommandHandler().showHelp("partner", sender, page);
+        double money = 0;
+        try {
+            money = roundMoney(Double.parseDouble(moneyString));
+        } catch (NumberFormatException e) {
+            Marriage.plugin.sendMessage(sender, "&c/partner deposit <money>");
+            return;
+        }
+
+        if (money == 0)
+            return;
+
+        double balance = Marriage.eco.getBalance(sender);
+        if (money > balance)
+        {
+            Marriage.plugin.sendMessage(sender, Messages.notEnoughMoney);
+            return;
+        }
+
+        Marriage.eco.withdrawPlayer(sender, money);
+        playerManager.setBalance(sender.getName(), playerManager.getBalance(sender.getName()) + money);
+
+        Marriage.plugin.sendMessage(sender, "&eYou deposited &6" + money + "&e in your shared bank");
+        Player partner = Marriage.plugin.getPlayer(playerManager.getPartner(sender.getName()));
+        if (partner != null)
+            Marriage.plugin.sendMessage(partner, "&e" + sender.getDisplayName() + "&e deposited &6" + money + "&e in your shared bank");
+    }
+
+    @Command(command = "partner", trigger = "withdraw", args = {"{int}"}, playersOnly = true, permission = Permissions.partnerMoney, desc = "Take money from your shared bank", usage = "/partner withdraw <money>")
+    public void moneyRemove(Player sender, String moneyString)
+    {
+        if (!playerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))
+        {
+            Marriage.plugin.sendMessage(sender, Messages.notMarriedToPlayer);
+            return;
+        }
+
+        double money = 0;
+        try {
+            money = roundMoney(Double.parseDouble(moneyString));
+        } catch (NumberFormatException e) {
+            Marriage.plugin.sendMessage(sender, "&c/partner withdraw <money>");
+            return;
+        }
+
+        if (money == 0)
+            return;
+
+        double sharedBalance = playerManager.getBalance(sender.getName());
+
+        if (money > sharedBalance)
+        {
+            Marriage.plugin.sendMessage(sender, Messages.notEnoughMoney);
+            return;
+        }
+
+        Marriage.eco.depositPlayer(sender, money);
+        playerManager.setBalance(sender.getName(), playerManager.getBalance(sender.getName()) - money);
+
+        Marriage.plugin.sendMessage(sender, "&eYou withdrew &6" + money + "&e from your shared bank");
+        Player partner = Marriage.plugin.getPlayer(playerManager.getPartner(sender.getName()));
+        if (partner != null)
+            Marriage.plugin.sendMessage(partner, "&e" + sender.getDisplayName() + "&e withdrew &6" + money + "&e from your shared bank");
+    }
+
+    @Command(command = "partner", trigger = "balance", args = {}, playersOnly = true, permission = Permissions.partnerMoney, desc = "Check the balance of your shared bank", usage = "/partner balance")
+    public void money(CommandSender sender)
+    {
+        if (!playerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))
+        {
+            Marriage.plugin.sendMessage(sender, Messages.notMarriedToPlayer);
+            return;
+        }
+
+        double sharedBalance = playerManager.getBalance(sender.getName());
+
+        Marriage.plugin.sendMessage(sender, "&eCurrent balance: $" + sharedBalance);
+    }
+
+    private double roundMoney(double value)
+    {
+        long factor = (long) Math.pow(10, 2);
+        value = value * factor;
+        long tmp = Math.round(value);
+        return (double) tmp / factor;
     }
 }

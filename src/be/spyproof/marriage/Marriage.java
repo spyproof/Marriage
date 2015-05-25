@@ -7,6 +7,7 @@ package be.spyproof.marriage;
 
 import be.spyproof.marriage.commands.*;
 import be.spyproof.marriage.commands.CommandHandler;
+import be.spyproof.marriage.datamanager.CooldownManager;
 import be.spyproof.marriage.listeners.CommandListener;
 import be.spyproof.marriage.datamanager.PlayerManager;
 import be.spyproof.marriage.listeners.PlayerListener;
@@ -31,6 +32,14 @@ public class Marriage extends JavaPlugin
     private static List<String> debuggers = new ArrayList<String>();
     public static Marriage plugin;
     public static Economy eco;
+
+    /**
+     * TODO Random ideas
+     *  - Cake!
+     *  - Soft depend HeroChat & WorldGuard
+     *  - Command interface (inventory)
+     *  - Family tree (implement family stuff)
+     */
 
     /**
      * public
@@ -104,6 +113,7 @@ public class Marriage extends JavaPlugin
     public void onEnable()
     {
     	plugin = this;
+        new CooldownManager();
     	this.saveDefaultConfig();
     	this.playerManager = new PlayerManager();
         this.playerListener = new PlayerListener();
@@ -112,16 +122,16 @@ public class Marriage extends JavaPlugin
         setupEconomy();
         registerListeners();
         registerCommands();
+
+
     }
 
     @Override
     public void onDisable()
     {
         this.playerManager.saveAllPlayers();
+        this.playerManager.closeDB();
     }
-
-    
-    
     
     /**
      * Private
@@ -150,5 +160,10 @@ public class Marriage extends JavaPlugin
         }
 
         return (eco != null);
+    }
+
+    private void loadWorldGuard()
+    {
+
     }
 }
