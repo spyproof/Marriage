@@ -8,6 +8,7 @@ package be.spyproof.marriage;
 import be.spyproof.marriage.commands.*;
 import be.spyproof.marriage.commands.CommandHandler;
 import be.spyproof.marriage.datamanager.CooldownManager;
+import be.spyproof.marriage.datamanager.MyConfig;
 import be.spyproof.marriage.listeners.CommandListener;
 import be.spyproof.marriage.datamanager.PlayerManager;
 import be.spyproof.marriage.listeners.PlayerListener;
@@ -19,6 +20,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,6 +34,7 @@ public class Marriage extends JavaPlugin
     private static List<String> debuggers = new ArrayList<String>();
     public static Marriage plugin;
     public static Economy eco;
+    public static MyConfig config;
 
     /**
      * TODO Random ideas
@@ -39,6 +42,8 @@ public class Marriage extends JavaPlugin
      *  - Soft depend HeroChat & WorldGuard
      *  - Command interface (inventory)
      *  - Family tree (implement family stuff)
+     *  - Heart effects
+     *  - Shared bank hooked into the economy
      */
 
     /**
@@ -112,9 +117,10 @@ public class Marriage extends JavaPlugin
     @Override
     public void onEnable()
     {
+        this.saveDefaultConfig();
     	plugin = this;
+        config = new MyConfig(this.getConfig(), new File(this.getDataFolder(), "config.yml"));
         new CooldownManager();
-    	this.saveDefaultConfig();
     	this.playerManager = new PlayerManager();
         this.playerListener = new PlayerListener();
         this.commandListener = new CommandListener();
@@ -131,6 +137,7 @@ public class Marriage extends JavaPlugin
     {
         this.playerManager.saveAllPlayers();
         this.playerManager.closeDB();
+        //config.save();
     }
     
     /**

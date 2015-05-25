@@ -3,7 +3,6 @@ package be.spyproof.marriage.commands;
 import be.spyproof.marriage.*;
 import be.spyproof.marriage.annotations.Beta;
 import be.spyproof.marriage.annotations.Command;
-import be.spyproof.marriage.annotations.Default;
 import be.spyproof.marriage.datamanager.PlayerManager;
 
 import org.bukkit.Location;
@@ -24,7 +23,7 @@ public class CommandPartner
     	this.playerManager = Marriage.plugin.getPlayerManager();
     }
 
-    @Command(command = "partner", trigger = "info", args = {}, playersOnly = true, permission = Permissions.partnerInfo, desc = "Check on your partner", usage = "/partner info")
+    @Command(command = "partner", trigger = "info", args = {}, playersOnly = true, permission = Permissions.partnerInfo, desc = "Check on your partner", usage = "/partner info", unlockRequired = "unlock-command.info")
     public void getPartnerName(CommandSender sender)
     {
         Status status = playerManager.getStatus(sender.getName());
@@ -51,7 +50,7 @@ public class CommandPartner
             Marriage.plugin.sendMessage(sender, Messages.notMarried);
     }
 
-    @Command(command = "partner", trigger = "seen", args = {}, playersOnly = true, permission = Permissions.partnerSeen, desc = "Last time your partner was online", usage = "/partner seen")
+    @Command(command = "partner", trigger = "seen", args = {}, playersOnly = true, permission = Permissions.partnerSeen, desc = "Last time your partner was online", usage = "/partner seen", unlockRequired = "unlock-command.seen")
     public void lastSeenPartner(CommandSender sender)
     {
         if (!playerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))
@@ -59,6 +58,8 @@ public class CommandPartner
             Marriage.plugin.sendMessage(sender, Messages.notMarriedToPlayer);
             return;
         }
+
+        //TODO last seen on which server
 
         String partnerName = playerManager.getPartner(sender.getName());
         Player partner = Marriage.plugin.getPlayer(partnerName);
@@ -68,12 +69,11 @@ public class CommandPartner
         }else{
 
             long timeDiff = (System.currentTimeMillis() - playerManager.getLastOnline(partnerName)) / 1000;
-            Marriage.plugin.sendDebugInfo("" + System.currentTimeMillis() + " - " + playerManager.getLastOnline(partnerName) + " / 1000 = " + timeDiff);
             Marriage.plugin.sendMessage(sender, Messages.lastSeen.replace("{time}", Messages.timeformat(timeDiff)));
         }
     }
 
-    @Command(command = "partner", trigger = "chat", args = {}, playersOnly = true, permission = Permissions.partnerChat, desc = "Chat privately with your partner", usage = "/partner chat")
+    @Command(command = "partner", trigger = "chat", args = {}, playersOnly = true, permission = Permissions.partnerChat, desc = "Chat privately with your partner", usage = "/partner chat", unlockRequired = "unlock-command.chat")
     public void chat(CommandSender sender)
     {
         if (!playerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))
@@ -99,7 +99,7 @@ public class CommandPartner
         }
     }
 
-    @Command(command = "partner", trigger = "tp", args = {}, playersOnly = true, permission = Permissions.partnerTp, desc = "Teleport to your partner", usage = "/partner tp")
+    @Command(command = "partner", trigger = "tp", args = {}, playersOnly = true, permission = Permissions.partnerTp, desc = "Teleport to your partner", usage = "/partner tp", unlockRequired = "unlock-command.tp")
     public void teleport(Player sender)
     {
         if (!playerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))
@@ -123,7 +123,7 @@ public class CommandPartner
         Marriage.plugin.sendMessage(partner, "&e" + sender.getDisplayName() + " &eteleported to you");
     }
 
-    @Command(command = "partner", trigger = "sethome", args = {}, playersOnly = true, permission = Permissions.partnerHome, desc = "Set the home location", usage = "/partner sethome")
+    @Command(command = "partner", trigger = "sethome", args = {}, playersOnly = true, permission = Permissions.partnerHome, desc = "Set the home location", usage = "/partner sethome", unlockRequired = "unlock-command.home")
     public void setHome(Player sender)
     {
         if (!playerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))
@@ -141,7 +141,7 @@ public class CommandPartner
 
     }
 
-    @Command(command = "partner", trigger = "home", args = {}, playersOnly = true, permission = Permissions.partnerHome, desc = "Go to your home location", usage = "/partner home")
+    @Command(command = "partner", trigger = "home", args = {}, playersOnly = true, permission = Permissions.partnerHome, desc = "Go to your home location", usage = "/partner home", unlockRequired = "unlock-command.home")
     public void goHome(Player sender)
     {
         if (!playerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))
@@ -157,7 +157,7 @@ public class CommandPartner
     }
 
     @Beta
-    @Command(command = "partner", trigger = "inv", args = {}, playersOnly = true, permission = Permissions.partnerInventory, desc = "Open your partner's inventory", usage = "/partner inv")
+    @Command(command = "partner", trigger = "inv", args = {}, playersOnly = true, permission = Permissions.partnerInventory, desc = "Open your partner's inventory", usage = "/partner inv", unlockRequired = "unlock-command.inventory")
     public void openInventory(Player sender)
     {
         /*if (!playerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))
@@ -186,7 +186,7 @@ public class CommandPartner
     }
 
     @Beta
-    @Command(command = "partner", trigger = "trustinv", args = {}, playersOnly = true, permission = Permissions.partnerInventory, desc = "Let's your partner open your inventory", usage = "/partner trustinv")
+    @Command(command = "partner", trigger = "trustinv", args = {}, playersOnly = true, permission = Permissions.partnerInventory, desc = "Let's your partner open your inventory", usage = "/partner trustinv", unlockRequired = "unlock-command.inventory")
     public void trustInventory(CommandSender sender)
     {
         if (!playerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))
@@ -210,7 +210,7 @@ public class CommandPartner
         }
     }
 
-    @Command(command = "partner", trigger = "deposit", args = {"{int}"}, playersOnly = true, permission = Permissions.partnerMoney, desc = "Add money to your shared bank", usage = "/partner deposit <money>")
+    @Command(command = "partner", trigger = "deposit", args = {"{int}"}, playersOnly = true, permission = Permissions.partnerMoney, desc = "Add money to the shared bank", usage = "/partner deposit <money>")
     public void moneyAdd(Player sender, String moneyString)
     {
         if (!playerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))
@@ -240,13 +240,13 @@ public class CommandPartner
         Marriage.eco.withdrawPlayer(sender, money);
         playerManager.setBalance(sender.getName(), playerManager.getBalance(sender.getName()) + money);
 
-        Marriage.plugin.sendMessage(sender, "&eYou deposited &6" + money + "&e in your shared bank");
+        Marriage.plugin.sendMessage(sender, "&eYou deposited &6$" + money + "&e in your shared bank");
         Player partner = Marriage.plugin.getPlayer(playerManager.getPartner(sender.getName()));
         if (partner != null)
-            Marriage.plugin.sendMessage(partner, "&e" + sender.getDisplayName() + "&e deposited &6" + money + "&e in your shared bank");
+            Marriage.plugin.sendMessage(partner, "&e" + sender.getDisplayName() + "&e deposited &6$" + money + "&e in your shared bank");
     }
 
-    @Command(command = "partner", trigger = "withdraw", args = {"{int}"}, playersOnly = true, permission = Permissions.partnerMoney, desc = "Take money from your shared bank", usage = "/partner withdraw <money>")
+    @Command(command = "partner", trigger = "withdraw", args = {"{int}"}, playersOnly = true, permission = Permissions.partnerMoney, desc = "Take money from the shared bank", usage = "/partner withdraw <money>")
     public void moneyRemove(Player sender, String moneyString)
     {
         if (!playerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))
@@ -277,13 +277,13 @@ public class CommandPartner
         Marriage.eco.depositPlayer(sender, money);
         playerManager.setBalance(sender.getName(), playerManager.getBalance(sender.getName()) - money);
 
-        Marriage.plugin.sendMessage(sender, "&eYou withdrew &6" + money + "&e from your shared bank");
+        Marriage.plugin.sendMessage(sender, "&eYou withdrew &6$" + money + "&e from your shared bank");
         Player partner = Marriage.plugin.getPlayer(playerManager.getPartner(sender.getName()));
         if (partner != null)
-            Marriage.plugin.sendMessage(partner, "&e" + sender.getDisplayName() + "&e withdrew &6" + money + "&e from your shared bank");
+            Marriage.plugin.sendMessage(partner, "&e" + sender.getDisplayName() + "&e withdrew &6$" + money + "&e from your shared bank");
     }
 
-    @Command(command = "partner", trigger = "balance", args = {}, playersOnly = true, permission = Permissions.partnerMoney, desc = "Check the balance of your shared bank", usage = "/partner balance")
+    @Command(command = "partner", trigger = "balance", args = {}, playersOnly = true, permission = Permissions.partnerMoney, desc = "Check the balance of the shared bank", usage = "/partner balance")
     public void money(CommandSender sender)
     {
         if (!playerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))

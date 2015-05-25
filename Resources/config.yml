@@ -18,6 +18,15 @@ broadcast-prefix: '&b&l[&2&lMarriageEC&b&l]'
 # Homes, shared money and last seen are linked per server name
 server_name: default
 
+# Unlock the following /partner <command> after having a bank value of...
+unlock-command:
+  info: 1000
+  seen: 5000
+  chat: 10000
+  tp: 20000
+  home: 50000
+  inventory: 100000
+
 # MySQL
 database: DBname
 host: localhost

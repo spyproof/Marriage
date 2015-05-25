@@ -83,13 +83,15 @@ public class CommandHandler implements TabCompleter
         //Devide the help section into multiple pages
         for (int i = (int) (page*helpPerPage); i < ((int) ((page+1)*helpPerPage) < help.size() ? (int) ((page+1)*helpPerPage) : help.size()); i++)
             Marriage.plugin.sendMessage(sender, help.get(i));
-        if (((int) ((page+1)*helpPerPage) < help.size()))
+        if (help.size() - ((int) ((page+1)*helpPerPage)) == 1)
+            Marriage.plugin.sendMessage(sender, help.get(help.size()-1));
+        else if (((int) ((page+1)*helpPerPage) < help.size()))
             Marriage.plugin.sendMessage(sender, ChatColor.YELLOW + "/" + cmd + " help " + (page + 2));
     }
 
     public List<String> getHelp(String cmd, CommandSender sender)
     {
-        List<String> help = new ArrayList<String>();
+        Map<String, Integer> help = new HashMap<String, Integer>();
         for (Command cmdInfo: commandMap.keySet())
             //Only show help when: the command name is right & command is not hidden from the help menu & the sender has the permission
             if (cmd.equalsIgnoreCase(cmdInfo.command()) && !cmdInfo.helpHidden() && Permissions.hasPerm(sender, cmdInfo.permission()))
@@ -109,11 +111,37 @@ public class CommandHandler implements TabCompleter
                         addHelp = true;
 
                     if (addHelp)
-                        help.add("&b" + cmdInfo.usage() + "&r -" + (commandMap.get(cmdInfo).isAnnotationPresent(Beta.class) ? " &r[&2&o&lBeta&f]" : "") + " &a" + cmdInfo.desc().replaceAll("[{}]", ""));
+                    {
+                        int cost = Marriage.config.getInt(cmdInfo.unlockRequired());
+                        help.put("&b" + cmdInfo.usage() + "&r -" + (commandMap.get(cmdInfo).
+                                isAnnotationPresent(Beta.class) ? " &r[&2&o&lBeta&f]" : "") + " &a" +
+                                (hasMoney(sender, cmdInfo.unlockRequired()) ? cmdInfo.desc().replaceAll("[{}]", "") : Messages.sharedMoneyNeeded)
+                                .replace("{money}", cost + ""), cost);
+                    }
                 }
         //Sort the help menu alphabetically
-        Collections.sort(help);
-        return help;
+        //Collections.sort(help);
+
+        //Sort the help menu by unlock cost
+        List<String> sortedHelp = new ArrayList<String>();
+        int lastCost = -1;
+        int currentCost = Integer.MAX_VALUE;
+        String lineToAdd = "";
+        while (sortedHelp.size() != help.size())
+        {
+            for (String helpLine : help.keySet())
+                if (!sortedHelp.contains(helpLine) && currentCost >= help.get(helpLine) && lastCost <= help.get(helpLine))
+                {
+                    lineToAdd = helpLine;
+                    currentCost = help.get(helpLine);
+                }
+            lastCost = help.get(lineToAdd);
+            sortedHelp.add(lineToAdd);
+            currentCost = Integer.MAX_VALUE;
+            lineToAdd = "";
+        }
+
+        return sortedHelp;
     }
 
     public void callCommand(String command, String trigger, CommandSender sender, String[] args)
@@ -133,54 +161,59 @@ public class CommandHandler implements TabCompleter
             //If the method has the @Command
             if (cmdInfo != null)
             {
-                //if the commands match "/command1" ?= "/command2" TODO remove this?
-                //if (cmdInfo.command().equalsIgnoreCase(command))
+                //Fill defaults based on @Default (does not overwrite)
+                String[] newArgs = fillDefaults(method, args, sender.getName());
+                //Check if the argument amount are the same
+                if (newArgs.length == cmdInfo.args().length)
                 {
-                    //Fill defaults based on @Default (does not overwrite)
-                    String[] newArgs = fillDefaults(method, args, sender.getName());
-                    //Check if the argument amount are the same
-                    if (newArgs.length == cmdInfo.args().length)
+                    //Check if its player only
+                    if (!(sender instanceof Player) && cmdInfo.playersOnly())
                     {
-                        //Check if its player only
-                        if (!(sender instanceof Player) && cmdInfo.playersOnly())
+                        Marriage.plugin.sendMessage(sender, Messages.playerOnly);
+                        Marriage.plugin.sendDebugInfo(sender.getName() + " is not a player, the command is only for players");
+                        return;
+                    }else {
+                        //Check for permissions
+                        if (Permissions.hasPerm(sender, cmdInfo.permission()))
                         {
-                            Marriage.plugin.sendMessage(sender, Messages.playerOnly);
-                            Marriage.plugin.sendDebugInfo(sender.getName() + " is not a player, the command is only for players");
-                            return;
-                        }else {
-                            //Check for permissions
-                            if (Permissions.hasPerm(sender, cmdInfo.permission()))
-                            {
-                                try {
-                                    //Check if the command is in beta (has @beta)
-                                    if (method.isAnnotationPresent(Beta.class) && Marriage.plugin.getConfig().getBoolean("beta-testing"))
-                                        Marriage.plugin.sendMessage(sender, method.getAnnotation(Beta.class).value());
-                                    else if (method.isAnnotationPresent(Beta.class) && !Marriage.plugin.getConfig().getBoolean("beta-testing"))
-                                    {
+                            try {
+                                //Check if the command is in beta (has @beta)
+                                if (method.isAnnotationPresent(Beta.class) && Marriage.plugin.getConfig().getBoolean("beta-testing"))
+                                    Marriage.plugin.sendMessage(sender, method.getAnnotation(Beta.class).value());
+                                else if (method.isAnnotationPresent(Beta.class) && !Marriage.plugin.getConfig().getBoolean("beta-testing"))
+                                {
+                                    if (sender.isOp())
                                         Marriage.plugin.sendMessage(sender, "&cEnable beta testing to get access to this command");
-                                        Marriage.plugin.sendDebugInfo("Beta testing access only");
-                                        return;
-                                    }
-
-                                    //Try to execute the command
-                                    if (newArgs.length == 0)
-                                        method.invoke(instances.get(method), sender);
-                                    else if (newArgs.length == 1)
-                                        method.invoke(instances.get(method), sender, newArgs[0]);
                                     else
-                                        method.invoke(instances.get(method), sender, newArgs);
-                                    Marriage.plugin.sendDebugInfo(sender.getName() + " successfully invoked the command!");
-                                } catch (IllegalAccessException e) {
-                                    e.printStackTrace();
-                                } catch (InvocationTargetException e) {
-                                    e.printStackTrace();
+                                        Marriage.plugin.sendMessage(sender, "&cThis command is in testing fase and therefor disabled");
+                                    Marriage.plugin.sendDebugInfo("Beta testing access only");
+                                    return;
                                 }
-                                return;
-                            }else{
-                                Marriage.plugin.sendMessage(sender, Messages.noPermission);
-                                Marriage.plugin.sendDebugInfo("&c" + sender.getName() + " does not have the permission:\n&c&o" + cmdInfo.permission());
-                                return;
+
+                                if (!hasMoney(sender, cmdInfo.unlockRequired()))
+                                {
+                                    Marriage.plugin.sendMessage(sender, Messages.sharedMoneyNeeded.replace("{money}",Marriage.config.getInt(cmdInfo.unlockRequired()) + ""));
+                                    return;
+                                }
+
+                                //Try to execute the command
+                                if (newArgs.length == 0)
+                                    method.invoke(instances.get(method), sender);
+                                else if (newArgs.length == 1)
+                                    method.invoke(instances.get(method), sender, newArgs[0]);
+                                else
+                                    method.invoke(instances.get(method), sender, newArgs);
+                                Marriage.plugin.sendDebugInfo(sender.getName() + " successfully invoked the command!");
+                            } catch (IllegalAccessException e) {
+                                e.printStackTrace();
+                            } catch (InvocationTargetException e) {
+                                e.printStackTrace();
                             }
+                            return;
+                        }else{
+                            Marriage.plugin.sendMessage(sender, Messages.noPermission);
+                            Marriage.plugin.sendDebugInfo("&c" + sender.getName() + " does not have the permission:\n&c&o" + cmdInfo.permission());
+                            return;
                         }
                     }
                 }
@@ -371,5 +404,12 @@ public class CommandHandler implements TabCompleter
             if ((cmdInfo.trigger().replaceAll("[{}]", "")).equalsIgnoreCase(trigger) && cmdInfo.command().equalsIgnoreCase(command))
                 return commandMap.get(cmdInfo);
         return null;
+    }
+
+    private boolean hasMoney(CommandSender sender, String money)
+    {
+        if (Permissions.hasPerm(sender, Permissions.bypassCommandCosts))
+            return true;
+        return Marriage.plugin.getPlayerManager().getBalance(sender.getName()) >= Marriage.config.getInt(money);
     }
 }

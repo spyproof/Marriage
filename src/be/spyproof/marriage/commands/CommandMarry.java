@@ -8,7 +8,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.permissions.Permission;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -22,7 +21,7 @@ public class CommandMarry
 	private PlayerManager playerManager;
     private Map<String, String> offers;// receiver - sender
     private Map<String, Long> timeout;// sender - cooldown
-    private double cost = Marriage.plugin.getConfig().getDouble("marriage-cost");
+    private double cost = Marriage.config.getDouble("marriage-cost");
     private Long timeoutCooldown;
 
     public CommandMarry()
@@ -30,7 +29,7 @@ public class CommandMarry
     	this.playerManager = Marriage.plugin.getPlayerManager();
         this.offers = new HashMap<String, String>();
         this.timeout = new HashMap<String, Long>();
-        this.timeoutCooldown = Marriage.plugin.getConfig().getLong("cooldown.request") * 60 * 1000;
+        this.timeoutCooldown = Marriage.config.getLong("cooldown.request") * 60 * 1000;
     }
 
     @Command(command = "marry", trigger = "deny", args = {}, playersOnly = true, permission = Permissions.playerMarryOther, desc = "Deny the marriage request", usage = "/marry deny")
@@ -86,7 +85,7 @@ public class CommandMarry
 
         CooldownManager.cooldownManager.setCooldown(sender.getName(), "request");
 
-        if (!Permissions.hasPerm(partner, Permissions.bypassCosts))
+        if (!Permissions.hasPerm(partner, Permissions.bypassMarriageCosts))
         {
             if (Marriage.eco.has(partner, this.cost))
             {
@@ -221,7 +220,7 @@ public class CommandMarry
             return;
         }
 
-        if (!Permissions.hasPerm(sender, Permissions.bypassCosts))
+        if (!Permissions.hasPerm(sender, Permissions.bypassMarriageCosts))
         {
             if (!Marriage.eco.has(sender, this.cost))
             {

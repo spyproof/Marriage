@@ -82,8 +82,8 @@ public class CommandAdmMarry
             Marriage.plugin.sendMessage(sender, "&6Gender: &e" + gender);
             Marriage.plugin.sendMessage(sender, "&6Status: &e" + status);
 
-            /*if (!playerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))
-                return;*/
+            if (!playerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))
+                return;
 
             Marriage.plugin.sendMessage(sender, "&6Partner: &e" + partner);
             Marriage.plugin.sendMessage(sender, "&6Balance: &e$" + balance);

@@ -20,6 +20,8 @@ public @interface Command
 
     String[] args();
 
+    String unlockRequired() default "none"; //Refers to a config option
+
     boolean playersOnly() default false;
 
     String permission() default "none";

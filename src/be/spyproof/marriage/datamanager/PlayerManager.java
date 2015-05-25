@@ -99,42 +99,74 @@ public class PlayerManager
 
     public Double getBalance(String name)
     {
-    	return getPlayerData(name).getBalance();
+        PlayerData playerData = getPlayerData(name);
+        if (playerData == null)
+            return null;
+        else
+            return playerData.getBalance();
     }
     
     public Gender getGender(String name)
     {
-        return getPlayerData(name).getGender();
+        PlayerData playerData = getPlayerData(name);
+        if (playerData == null)
+            return null;
+        else
+            return playerData.getGender();
     }
 
     public Status getStatus(String name)
     {
-        return getPlayerData(name).getStatus();
+        PlayerData playerData = getPlayerData(name);
+        if (playerData == null)
+            return null;
+        else
+            return playerData.getStatus();
     }
 
     public String getPartner(String name)
     {
-        return getPlayerData(name).getPartner();
+        PlayerData playerData = getPlayerData(name);
+        if (playerData == null)
+            return null;
+        else
+            return playerData.getPartner();
     }
 
     public boolean trustsPartner(String name)
     {
-        return getPlayerData(name).trustsPartner();
+        PlayerData playerData = getPlayerData(name);
+        if (playerData == null)
+            return false;
+        else
+            return playerData.trustsPartner();
     }
 
     public boolean isHomeSet(String name)
     {
-        return getPlayerData(name).isHomeSet();
+        PlayerData playerData = getPlayerData(name);
+        if (playerData == null)
+            return false;
+        else
+            return playerData.isHomeSet();
     }
 
     public Location getHomeLoc(String name)
     {
-        return getPlayerData(name).getHomeLoc();
+        PlayerData playerData = getPlayerData(name);
+        if (playerData == null)
+            return null;
+        else
+            return playerData.getHomeLoc();
     }
 
     public long getLastOnline(String name)
     {
-        return getPlayerData(name).getLastSeen();
+        PlayerData playerData = getPlayerData(name);
+        if (playerData == null)
+            return 0L;
+        else
+            return playerData.getLastSeen();
     }
 
     public boolean isMarried(String name)

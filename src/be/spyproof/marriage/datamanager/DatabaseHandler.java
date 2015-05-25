@@ -47,14 +47,14 @@ public class DatabaseHandler {
     		return;
     	}
     	
-    	this.host = Marriage.plugin.getConfig().getString("host");
-    	this.port = Marriage.plugin.getConfig().getString("port");
-    	this.database = Marriage.plugin.getConfig().getString("database");
-    	this.user = Marriage.plugin.getConfig().getString("user");
-    	this.password = Marriage.plugin.getConfig().getString("password");
-    	this.table = Marriage.plugin.getConfig().getString("table");
-    	this.serversTable = Marriage.plugin.getConfig().getString("servers_table");
-    	this.serverName = Marriage.plugin.getConfig().getString("server_name");
+    	this.host = Marriage.config.getString("host");
+    	this.port = Marriage.config.getString("port");
+    	this.database = Marriage.config.getString("database");
+    	this.user = Marriage.config.getString("user");
+    	this.password = Marriage.config.getString("password");
+    	this.table = Marriage.config.getString("table");
+    	this.serversTable = Marriage.config.getString("servers_table");
+    	this.serverName = Marriage.config.getString("server_name");
     	if (this.port != null && !this.port.equals("")) {
     		this.port = ":"+this.port;
     	}

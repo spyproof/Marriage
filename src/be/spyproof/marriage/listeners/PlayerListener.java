@@ -69,6 +69,7 @@ public class PlayerListener implements Listener
         e.setFormat(e.getFormat().replace("{marry}", prefix));
     }
 
+    //TODO handle essential & banmanager mutes
 	@EventHandler
     public void onNormalChat(AsyncPlayerChatEvent e)
     {

@@ -5,7 +5,7 @@ package be.spyproof.marriage;
  */
 public class Messages
 {
-	public static String prefix = Marriage.plugin.getConfig().getString("broadcast-prefix");
+	public static String prefix = Marriage.config.getString("broadcast-prefix");
 	public static String prefixMarried = "\u2665";
 	public static String prefixRightHand = "\u2666";
 	public static String prefixLeftHand = "\u2666";
@@ -30,6 +30,8 @@ public class Messages
 	public static final String onCooldown = "&cYou need to wait &e{time}&c before using this command!";
     public static final String notEnoughMoney = "&cYou do not have enough money!";
     public static final String notEnoughMoneyPartner = "&c{player} &cdoes not have enough money!";
+    public static final String notEnoughSharedMoney = "&cYou need to have ${money} in your shared bank to use this command!";
+    public static final String sharedMoneyNeeded = "&1You need ${money} in your shared bank";
 
     /**
      *
