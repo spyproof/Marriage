@@ -27,6 +27,7 @@ public class Messages
 	public static final String notOnline = "&c{player}&c is not online";
 	public static final String noPermission = "&cYou do not have permission to use this command";
     public static final String noProposal = "&cNo one has send a proposal to you yet";
+    public static final String noHomeSet = "&cYou do not have a home set";
     public static final String proposalExpired = "&cThe last proposal has expired";
     public static final String activeProposal = "&c{player} is already has an open proposal";
 	public static final String divorce = "&5You are now divorced";
@@ -40,6 +41,7 @@ public class Messages
     public static final String sharedMoneyNeeded = "&1You need ${money} in your shared bank";
     public static final String invAlreadyOpen = "&eYour partner already has the inventory open!";
     public static final String muted = "&cYou are muted!";
+    public static final String perkInvName = ChatColor.BLUE + "Passive perks";
 
     public static final String banManagerPluginName = "BanManager";
     public static final String effectsLibPluginName = "EffectLib";

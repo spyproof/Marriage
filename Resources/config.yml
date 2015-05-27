@@ -15,9 +15,6 @@ beta-testing: false
 # The prefix for the broadcast when people marry
 broadcast-prefix: '&b&l[&2&lMarriageEC&b&l]'
 
-# Homes, shared money and last seen are linked per server name
-server_name: default
-
 # Smites the partner upon the death of his/her partner
 smite-on-partner-dead: true
 
@@ -36,6 +33,9 @@ unlock:
     teleport-effects: 25000
     no-smite-on-partner-dead: 40000
     hearts: 60000
+
+# Homes, shared money and last seen are linked per server name
+server_name: default
 
 # MySQL
 database: DBname

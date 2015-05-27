@@ -41,7 +41,7 @@ public class CommandAdmMarry
     @Command(command = "admmarry", trigger = "reload", args = {}, playersOnly = false, permission = Permissions.adminReload, desc = "Reload the player config", usage = "/admmarry reload")
     public void forceReload(CommandSender sender)
     {
-        playerManager.reload(); //TODO handle error
+        playerManager.reload();
         Marriage.config.load();
         sender.sendMessage(ChatColor.DARK_GREEN + "Reloading player config... Loaded " + playerManager.getLoadedPlayers().size() + " players");
     }
@@ -49,7 +49,7 @@ public class CommandAdmMarry
     @Command(command = "admmarry", trigger = "save", args = {}, playersOnly = false, permission = Permissions.adminSave, desc = "Save the config manually", usage = "/admmarry save")
     public void forceSave(CommandSender sender)
     {
-        playerManager.saveAllPlayers(); //TODO handle error
+        playerManager.saveAllPlayers();
         sender.sendMessage(ChatColor.DARK_GREEN + "Saved " + playerManager.getLoadedPlayers().size() + " players");
     }
 
@@ -154,7 +154,7 @@ public class CommandAdmMarry
         Messages.sendMessage(sender, "&eYou have reset the cooldowns of " + player);
     }
 
-    @Default({"1", "1", "20"})
+    @Default({"1", "1", "1"})
     @Command(command = "admmarry", trigger = "effect", args = {"{int}", "{int}", "{int}"}, helpHidden = true, playersOnly = true)
     public void effects(final Player sender, String[] args)
     {
@@ -202,7 +202,7 @@ public class CommandAdmMarry
         Effect effect = getEffect(effectID, particleID);
 
         effect.iterations = iteration;
-        effect.delay = particleID;
+        effect.delay = 0;
         effect.setEntity(sender);
         effect.start();
     }

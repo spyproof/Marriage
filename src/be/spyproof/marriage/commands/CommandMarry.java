@@ -209,8 +209,8 @@ public class CommandMarry
 
     }
 
-    //TODO add money to desc
-    @Command(command = "marry", trigger = "player", args = {"{player}"}, playersOnly = true, permission = Permissions.playerMarryOther, desc = "Marry a player ($10'000)", usage = "/marry player <name>")
+    //TODO add money to desc somehow
+    @Command(command = "marry", trigger = "player", args = {"{player}"}, playersOnly = true, permission = Permissions.playerMarryOther, desc = "Marry a player", usage = "/marry player <name>")
     public void sendMarriageRequestPlayer(Player sender, String receiverName)
     {
         Player receiver = Marriage.plugin.getPlayer(receiverName);

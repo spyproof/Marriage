@@ -17,6 +17,7 @@ public class PlayerData
     private Status status;
     private String partner;
     private boolean isSharedInvOpen;
+    private boolean trustsPartner;
     private boolean homeSet;
     private boolean partnerChat;
     private Location location;
@@ -60,24 +61,25 @@ public class PlayerData
      * @param gender
      * @param status
      * @param partner
-     * @param isSharedInvOpen
+     * @param trustsPartner
      * @param homeSet
      * @param location
      * @param lastSeen
      * @param balance
      */
-    public PlayerData(String name, Gender gender, Status status, String partner, boolean isSharedInvOpen, boolean homeSet, Location location, Long lastSeen, Double balance)
+    public PlayerData(String name, Gender gender, Status status, String partner, boolean trustsPartner, boolean homeSet, Location location, Long lastSeen, Double balance)
     {
-        this.name = name;
+        this.name = name.toLowerCase();
         this.gender = gender;
         this.status = status;
-        this.partner = partner;
-        this.isSharedInvOpen = isSharedInvOpen;
+        this.partner = partner.toLowerCase();
+        this.trustsPartner = trustsPartner;
         this.homeSet = homeSet;
         this.partnerChat = false;
         this.location = location;
         this.lastSeen = lastSeen;
         this.balance = balance;
+        this.isSharedInvOpen = false;
 
         if (this.location == null)
             this.location = new Location(Marriage.plugin.getServer().getWorld("world"), 0, 0, 0, 0F, 0F);
@@ -110,6 +112,11 @@ public class PlayerData
     public boolean isSharedInvOpen()
     {
         return isSharedInvOpen;
+    }
+
+    public boolean trustsPartner()
+    {
+        return trustsPartner;
     }
 
     public boolean isPartnerChatOn()
@@ -159,6 +166,11 @@ public class PlayerData
     public void setIsSharedInvOpen(boolean trustsPartner)
     {
         this.isSharedInvOpen = trustsPartner;
+    }
+
+    public void setTrustsPartner(boolean trustsPartner)
+    {
+        this.trustsPartner = trustsPartner;
     }
 
     public void setPartnerChat(boolean partnerChat)

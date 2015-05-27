@@ -15,6 +15,7 @@ public class Permissions
     public static final String adminPlugin = "marriage.admin.plugin";
     public static final String adminSocialSpy = "marriage.admin.socialspy";
     public static final String adminResetCooldown = "marriage.admin.resetcooldown";
+
     public static final String playerMarryOther = "marriage.player.marry.other";
     public static final String playerMarrySelf = "marriage.player.marry.self";
     public static final String playerDivorce = "marriage.player.divorce";
@@ -27,6 +28,21 @@ public class Permissions
     public static final String partnerHome = "marriage.player.partner.home";
     public static final String partnerInventory = "marriage.player.partner.inventory";
     public static final String partnerMoney = "marriage.player.partner.money";
+
+    public static final String unlockCommandSeen = "unlock.command.seen";
+    public static final String unlockCommandInfo = "unlock.command.info";
+    public static final String unlockCommandChat = "unlock.command.chat";
+    public static final String unlockCommandTp = "unlock.command.tp";
+    public static final String unlockCommandHome = "unlock.command.home";
+    public static final String unlockCommandChest = "unlock.command.chest";
+    public static final String unlockCommandInv = "unlock.command.inventory";
+
+    public static final String unlockPerkPrefix = "unlock.perk.prefix";
+    public static final String unlockPerkLoginMessage  = "unlock.perk.login-message";
+    public static final String unlockPerkTeleportEffect = "unlock.perk.teleport-effects";
+    public static final String unlockPerkNoSmite = "unlock.perk.no-smite-on-partner-dead";
+    public static final String unlockPerkHearts = "unlock.perk.hearts";
+
     public static final String bypassCooldown = "marriage.perk.bypasscooldowns";
     public static final String bypassMarriageCosts = "marriage.perk.bypassmarriagecosts";
     public static final String bypassCommandCosts = "marriage.perk.bypasscommandcosts";

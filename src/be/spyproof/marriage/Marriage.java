@@ -41,9 +41,7 @@ public class Marriage extends JavaPlugin
 
     /**
      * TODO Random ideas
-     *  - Perk interface (inventory)
      *  - Family tree (implement family stuff)
-     *  - Heart effects
      *  - Shared bank hooked into the economy
      *
      *  - Shared donator perks
