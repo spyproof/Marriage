@@ -16,7 +16,7 @@ public class PlayerData
     private Gender gender;
     private Status status;
     private String partner;
-    private boolean trustsPartner;
+    private boolean isSharedInvOpen;
     private boolean homeSet;
     private boolean partnerChat;
     private Location location;
@@ -28,7 +28,7 @@ public class PlayerData
      * @param gender
      * @param status
      * @param partner
-     * @param trustsPartner
+     * @param isSharedInvOpen
      * @param homeSet
      * @param homeWorld
      * @param homeX
@@ -39,13 +39,13 @@ public class PlayerData
      * @param lastSeen
      * @param balance
      */
-    public PlayerData(String name, Gender gender, Status status, String partner, boolean trustsPartner, boolean homeSet, World homeWorld, int homeX, int homeY, int homeZ, Float homePitch, Float homeYaw, Long lastSeen, Double balance)
+    public PlayerData(String name, Gender gender, Status status, String partner, boolean isSharedInvOpen, boolean homeSet, World homeWorld, int homeX, int homeY, int homeZ, Float homePitch, Float homeYaw, Long lastSeen, Double balance)
     {
         this.name = name.toLowerCase();
         this.gender = gender;
         this.status = status;
         this.partner = partner;
-        this.trustsPartner = trustsPartner;
+        this.isSharedInvOpen = isSharedInvOpen;
         this.partnerChat = false;
         this.homeSet = homeSet;
         if (homeWorld == null)
@@ -60,19 +60,19 @@ public class PlayerData
      * @param gender
      * @param status
      * @param partner
-     * @param trustsPartner
+     * @param isSharedInvOpen
      * @param homeSet
      * @param location
      * @param lastSeen
      * @param balance
      */
-    public PlayerData(String name, Gender gender, Status status, String partner, boolean trustsPartner, boolean homeSet, Location location, Long lastSeen, Double balance)
+    public PlayerData(String name, Gender gender, Status status, String partner, boolean isSharedInvOpen, boolean homeSet, Location location, Long lastSeen, Double balance)
     {
         this.name = name;
         this.gender = gender;
         this.status = status;
         this.partner = partner;
-        this.trustsPartner = trustsPartner;
+        this.isSharedInvOpen = isSharedInvOpen;
         this.homeSet = homeSet;
         this.partnerChat = false;
         this.location = location;
@@ -107,9 +107,9 @@ public class PlayerData
         return partner;
     }
 
-    public boolean trustsPartner()
+    public boolean isSharedInvOpen()
     {
-        return trustsPartner;
+        return isSharedInvOpen;
     }
 
     public boolean isPartnerChatOn()
@@ -156,9 +156,9 @@ public class PlayerData
         this.partner = partner;
     }
 
-    public void setTrustsPartner(boolean trustsPartner)
+    public void setIsSharedInvOpen(boolean trustsPartner)
     {
-        this.trustsPartner = trustsPartner;
+        this.isSharedInvOpen = trustsPartner;
     }
 
     public void setPartnerChat(boolean partnerChat)

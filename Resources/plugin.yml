@@ -4,7 +4,8 @@ description: Allows players to marry
 author: TPNils & Idlehumor
 website: https://github.com/spyproof
 main: be.spyproof.marriage.Marriage
-depend: [Vault, Herochat]
+depend: [Vault]
+softdepend: [Herochat, Essentials, EffectLib]
 commands:
   marry:
     description: Marry commands

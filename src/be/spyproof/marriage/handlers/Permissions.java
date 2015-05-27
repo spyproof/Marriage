@@ -1,5 +1,6 @@
-package be.spyproof.marriage;
+package be.spyproof.marriage.handlers;
 
+import be.spyproof.marriage.Marriage;
 import org.bukkit.command.CommandSender;
 
 /**
@@ -27,16 +28,16 @@ public class Permissions
     public static final String partnerInventory = "marriage.player.partner.inventory";
     public static final String partnerMoney = "marriage.player.partner.money";
     public static final String bypassCooldown = "marriage.perk.bypasscooldowns";
-    public static final String bypassCosts = "marriage.perk.bypasscosts";
+    public static final String bypassMarriageCosts = "marriage.perk.bypassmarriagecosts";
+    public static final String bypassCommandCosts = "marriage.perk.bypasscommandcosts";
 
     //Check for player permission
-    public static boolean hasPerm(CommandSender sender, String perm)
+    public static boolean hasPerm(CommandSender sender, String perm) //TODO handle -i.am.a.perm
     {
         if (sender.hasPermission(perm) || perm.equalsIgnoreCase("none") || sender.isOp())
             return true;
         else
         {
-            //Check for wildcards -> perm needed = a.perm.1 -> player has a.perm.* -> return true
             boolean go = perm.contains(".");
             while (go)
             {
@@ -49,5 +50,20 @@ public class Permissions
             }
             return false;
         }
+    }
+
+    public static boolean hasMoney(CommandSender sender, String money)
+    {
+        return hasMoney(sender, Marriage.config.getInt(money));
+    }
+
+    public static boolean hasMoney(CommandSender sender, int money)
+    {
+        if (Permissions.hasPerm(sender, Permissions.bypassCommandCosts))
+            return true;
+        boolean hasMoney = Marriage.plugin.getPlayerManager().getBalance(sender.getName()) >= money;
+        if (!hasMoney)
+            Messages.sendDebugInfo("&cNot have enough money");
+        return hasMoney;
     }
 }
