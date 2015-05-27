@@ -2,13 +2,21 @@ package be.spyproof.marriage.commands;
 
 import be.spyproof.marriage.*;
 import be.spyproof.marriage.annotations.Command;
+import be.spyproof.marriage.annotations.Default;
 import be.spyproof.marriage.datamanager.CooldownManager;
 import be.spyproof.marriage.datamanager.PlayerManager;
+import be.spyproof.marriage.handlers.Messages;
+import be.spyproof.marriage.handlers.Permissions;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,7 +37,7 @@ public class CommandMarry
     	this.playerManager = Marriage.plugin.getPlayerManager();
         this.offers = new HashMap<String, String>();
         this.timeout = new HashMap<String, Long>();
-        this.timeoutCooldown = Marriage.config.getLong("cooldown.request") * 60 * 1000;
+        this.timeoutCooldown = (long) (Marriage.config.getInt("cooldown.request") * 60 * 1000);
     }
 
     @Command(command = "marry", trigger = "deny", args = {}, playersOnly = true, permission = Permissions.playerMarryOther, desc = "Deny the marriage request", usage = "/marry deny")
@@ -38,48 +46,55 @@ public class CommandMarry
         try{
             Player sadPlayer = Marriage.plugin.getPlayer(this.offers.get(sender.getName().toLowerCase())); //sadPartner = player who did /marry <player>
 
-            Marriage.plugin.sendMessage(sender, ChatColor.RED + "You rejected " + sadPlayer.getName() + "'s marriage request");
-            Marriage.plugin.sendMessage(sadPlayer, ChatColor.RED + sender.getName() + " rejected your marriage request ☹");
+            Messages.sendMessage(sender, ChatColor.RED + "You rejected " + sadPlayer.getName() + "'s marriage request");
+            Messages.sendMessage(sadPlayer, ChatColor.RED + sender.getName() + " rejected your marriage request ☹");
 
             this.timeout.remove(this.offers.get(sender.getName().toLowerCase()));
             this.offers.remove(sender.getName().toLowerCase());
 
         }catch (IllegalArgumentException e){
-            Marriage.plugin.sendMessage(sender, Messages.noProposal);
+            Messages.sendMessage(sender, Messages.noProposal);
         }
     }
 
     @Command(command = "marry", trigger = "accept", args = {}, playersOnly = true, permission = Permissions.playerMarryOther, desc = "Accept the marriage request", usage = "/marry accept")
-    public void AcceptMarriage(Player sender)
+    public void AcceptMarriage(final Player sender)
     {
         if (playerManager.isMarried(sender.getName()))
         {
-            Marriage.plugin.sendMessage(sender, Messages.alreadyMarried);
+            Messages.sendMessage(sender, Messages.alreadyMarried);
             return;
         }
 
-        String newPartner = this.offers.get(sender.getName().toLowerCase()); //newPartner = player who did /marry <player>
+        final String newPartner = this.offers.get(sender.getName().toLowerCase()); //newPartner = player who did /marry <player>
         Player partner = Marriage.plugin.getPlayer(newPartner);
+
+        if (newPartner == null)
+        {
+            Messages.sendMessage(sender, Messages.noProposal);
+            return;
+        }
 
         //Check if offer has not expired yet
         if (this.timeout.containsKey(newPartner.toLowerCase()))
+        {
             if (this.timeout.get(newPartner.toLowerCase()) < System.currentTimeMillis())
             {
-                Marriage.plugin.sendMessage(sender, Messages.proposalExpired);
-                this.timeout.remove(newPartner);
+                Messages.sendMessage(sender, Messages.proposalExpired);
                 return;
             }
+        }
 
         if (playerManager.isMarried(newPartner))
         {
-            Marriage.plugin.sendMessage(sender, Messages.alreadyMarriedOther.replace("{player}", newPartner));
+            Messages.sendMessage(sender, Messages.alreadyMarriedOther.replace("{player}", newPartner));
             return;
         }
 
         int cooldown = CooldownManager.cooldownManager.getCooldown(sender, "divorce");
         if (cooldown > 0)
         {
-            Marriage.plugin.sendMessage(sender, Messages.onCooldown.replace("{time}", Messages.timeformat(cooldown)));
+            Messages.sendMessage(sender, Messages.onCooldown.replace("{time}", Messages.timeformat(cooldown)));
             return;
         }
 
@@ -90,11 +105,11 @@ public class CommandMarry
             if (Marriage.eco.has(partner, this.cost))
             {
                 Marriage.eco.withdrawPlayer(partner, this.cost);
-                Marriage.plugin.sendMessage(partner, "Withdrew $" + this.cost + " for the marriage");
+                Messages.sendMessage(partner, "Withdrew $" + this.cost + " for the marriage");
             }
             else {
-                Marriage.plugin.sendMessage(partner, Messages.notEnoughMoney);
-                Marriage.plugin.sendMessage(sender, Messages.notEnoughMoneyPartner.replace("{player}", partner.getDisplayName()));
+                Messages.sendMessage(partner, Messages.notEnoughMoney);
+                Messages.sendMessage(sender, Messages.notEnoughMoneyPartner.replace("{player}", partner.getDisplayName()));
                 return;
             }
         }
@@ -105,18 +120,39 @@ public class CommandMarry
             playerManager.setPartner(sender.getName(), newPartner);
             playerManager.setPartner(newPartner, sender.getName());
 
+            for (Player p : Marriage.plugin.getOnlinePlayers())
+            {
+                for (int i = 0; i < p.getInventory().getSize(); i++)
+                {
+                    if (p.getInventory().getItem(i) == null)
+                    {
+                        //Create a cake
+                        ItemStack item = new ItemStack(Material.CAKE);
+                        ItemMeta meta = item.getItemMeta();
+                        meta.setDisplayName(ChatColor.LIGHT_PURPLE + "Wedding cake");
+                        meta.setLore(new ArrayList<String>()
+                        {{add(newPartner + " & " + sender.getName());}});
+                        meta.addEnchant(Enchantment.ARROW_INFINITE, 1, true);
+                        item.setItemMeta(meta);
 
+                        //givecake
+                        p.getInventory().setItem(i, item);
+
+                        break;
+                    }
+                }
+            }
 
             String broadcast = Messages.broadcast.replace("{prefix}", Messages.prefix).replace("{player1}", sender
                     .getName()).replace("{player2}", partner.getDisplayName());
             Bukkit.broadcastMessage(ChatColor.translateAlternateColorCodes('&', broadcast));
 
-            Marriage.plugin.sendMessage(sender, "&eUse &6&l/partner&e for your new perks!");
-            Marriage.plugin.sendMessage(Marriage.plugin.getPlayer(newPartner), "&eUse &6&l/partner&e for your new perks!");
+            Messages.sendMessage(sender, "&eUse &6&l/partner&e for your new perks!");
+            Messages.sendMessage(Marriage.plugin.getPlayer(newPartner), "&eUse &6&l/partner&e for your new perks!");
 
             this.offers.remove(sender.getName().toLowerCase());
         }catch (IllegalArgumentException e){
-            Marriage.plugin.sendMessage(sender, Messages.noProposal);
+            Messages.sendMessage(sender, Messages.noProposal);
         }
     }
 
@@ -125,7 +161,7 @@ public class CommandMarry
     {
         if (playerManager.isMarried(sender.getName()))
         {
-            Marriage.plugin.sendMessage(sender, Messages.alreadyMarried);
+            Messages.sendMessage(sender, Messages.alreadyMarried);
             return;
         }
 
@@ -135,7 +171,7 @@ public class CommandMarry
 
         if (cooldown > 0 && !Permissions.hasPerm(sender, Permissions.bypassCooldown))
         {
-            Marriage.plugin.sendMessage(sender, Messages.onCooldown.replace("{time}", Messages.timeformat(cooldown)));
+            Messages.sendMessage(sender, Messages.onCooldown.replace("{time}", Messages.timeformat(cooldown)));
             return;
         }
 
@@ -151,7 +187,7 @@ public class CommandMarry
     {
         if (playerManager.isMarried(sender.getName()))
         {
-            Marriage.plugin.sendMessage(sender, Messages.alreadyMarried);
+            Messages.sendMessage(sender, Messages.alreadyMarried);
             return;
         }
 
@@ -161,7 +197,7 @@ public class CommandMarry
 
         if (cooldown > 0)
         {
-            Marriage.plugin.sendMessage(sender, Messages.onCooldown.replace("{time}", Messages.timeformat(cooldown)));
+            Messages.sendMessage(sender, Messages.onCooldown.replace("{time}", Messages.timeformat(cooldown)));
             return;
         }
 
@@ -180,19 +216,19 @@ public class CommandMarry
         Player receiver = Marriage.plugin.getPlayer(receiverName);
         if (receiver == null)
         {
-            Marriage.plugin.sendMessage(sender, Messages.notOnline.replace("{player}", receiverName));
+            Messages.sendMessage(sender, Messages.notOnline.replace("{player}", receiverName));
             return;
         }
 
         if (playerManager.isMarried(sender.getName()))
         {
-            Marriage.plugin.sendMessage(sender, Messages.alreadyMarried);
+            Messages.sendMessage(sender, Messages.alreadyMarried);
             return;
         }
 
         if (playerManager.isMarried(receiverName))
         {
-            Marriage.plugin.sendMessage(sender, Messages.alreadyMarriedOther.replace("{player}", receiverName));
+            Messages.sendMessage(sender, Messages.alreadyMarriedOther.replace("{player}", receiverName));
             return;
         }
 
@@ -200,11 +236,15 @@ public class CommandMarry
         if (this.offers.containsKey(receiverName.toLowerCase()))
         {
             String key = this.offers.get(receiverName.toLowerCase());
-            if (this.timeout.get(key) > System.currentTimeMillis()) {
-                Marriage.plugin.sendMessage(sender, Messages.activeProposal.replace("{player}", receiverName));
-                return;
-            }else {
-                this.timeout.remove(key);
+            if (this.timeout.get(key) != null)
+            {
+                if (this.timeout.get(key) > System.currentTimeMillis()) {
+                    Messages.sendMessage(sender, Messages.activeProposal.replace("{player}", receiverName));
+                    return;
+                }
+                else {
+                    this.timeout.remove(key);
+                }
             }
         }
 
@@ -216,7 +256,7 @@ public class CommandMarry
 
         if (cooldown > 0)
         {
-            Marriage.plugin.sendMessage(sender, Messages.onCooldown.replace("{time}", Messages.timeformat(cooldown)));
+            Messages.sendMessage(sender, Messages.onCooldown.replace("{time}", Messages.timeformat(cooldown)));
             return;
         }
 
@@ -224,7 +264,7 @@ public class CommandMarry
         {
             if (!Marriage.eco.has(sender, this.cost))
             {
-                Marriage.plugin.sendMessage(sender, Messages.notEnoughMoney);
+                Messages.sendMessage(sender, Messages.notEnoughMoney);
                 return;
             }
         }
@@ -232,16 +272,16 @@ public class CommandMarry
         // When you marry yourself, marry your left or right hand
         if (sender.getName().equals(receiverName))
         {
-            Marriage.plugin.sendMessage(sender, ChatColor.LIGHT_PURPLE + "Use " + ChatColor.DARK_PURPLE + "/marry left" +
+            Messages.sendMessage(sender, ChatColor.LIGHT_PURPLE + "Use " + ChatColor.DARK_PURPLE + "/marry left" +
                     ChatColor.LIGHT_PURPLE + " or " + ChatColor.DARK_PURPLE + "/marry right" + ChatColor.LIGHT_PURPLE
                     + " to marry yourself");
         }else{
             this.timeout.put(sender.getName().toLowerCase(), System.currentTimeMillis() + this.timeoutCooldown);
             CooldownManager.cooldownManager.setCooldown(sender, "request");
-            Marriage.plugin.sendMessage(sender, ChatColor.DARK_PURPLE + "You send a marriage request to " + receiverName);
+            Messages.sendMessage(sender, ChatColor.DARK_PURPLE + "You send a marriage request to " + receiverName);
 
-            Marriage.plugin.sendMessage(receiver, ChatColor.LIGHT_PURPLE + sender.getName() + " wants to marry you!");
-            Marriage.plugin.sendMessage(receiver, ChatColor.LIGHT_PURPLE + "Use " + ChatColor.DARK_PURPLE + "/marry accept" +
+            Messages.sendMessage(receiver, ChatColor.LIGHT_PURPLE + sender.getName() + " wants to marry you!");
+            Messages.sendMessage(receiver, ChatColor.LIGHT_PURPLE + "Use " + ChatColor.DARK_PURPLE + "/marry accept" +
                     ChatColor.LIGHT_PURPLE + " or " + ChatColor.DARK_PURPLE + "/marry deny");
 
             this.offers.put(receiver.getName().toLowerCase(), sender.getName().toLowerCase());
@@ -256,10 +296,10 @@ public class CommandMarry
             try{
                 divorcePlayer(sender.getName());
             } catch (IllegalArgumentException e){
-                Marriage.plugin.sendMessage(sender, ChatColor.RED + e.getMessage());
+                Messages.sendMessage(sender, ChatColor.RED + e.getMessage());
             }
         }else{
-            Marriage.plugin.sendMessage(sender, Messages.notMarried);
+            Messages.sendMessage(sender, Messages.notMarried);
         }
     }
 
@@ -270,11 +310,12 @@ public class CommandMarry
         if (gender != null)
         {
             playerManager.setGender(sender.getName(), gender);
-            Marriage.plugin.sendMessage(sender, "&eYour gender is now " + gender.toString());
+            Messages.sendMessage(sender, "&eYour gender is now " + gender.toString());
         }else
-            Marriage.plugin.sendMessage(sender, "&cPossible genders are: male, female, hidden");
+            Messages.sendMessage(sender, "&cPossible genders are: male, female, hidden");
     }
 
+    @Default({"{player}"})
     @Command(command = "marry", trigger = "info", args = {"{player}"}, playersOnly = true, permission = Permissions.playerInfo, desc = "Get the player information", usage = "/marry info <player>")
     public void getPlayerInfo(CommandSender sender, String player)
     {
@@ -284,20 +325,20 @@ public class CommandMarry
             gender = playerManager.getGender(player).toString();
             partner = playerManager.getPartner(player);
 
-            Marriage.plugin.sendMessage(sender, "&e------------&6&l" + player + "&e------------");
+            Messages.sendMessage(sender, "&e------------&6&l" + player + "&e------------");
 
             if (gender.equalsIgnoreCase(Gender.MALE.toString()))
-                Marriage.plugin.sendMessage(sender, "&6Gender:&b ♂ &e" + gender);
+                Messages.sendMessage(sender, "&6Gender:&b ♂ &e" + gender);
             else if(gender.equalsIgnoreCase(Gender.FEMALE.toString()))
-                Marriage.plugin.sendMessage(sender, "&6Gender:&d ♀ &e" + gender);
+                Messages.sendMessage(sender, "&6Gender:&d ♀ &e" + gender);
             else
-                Marriage.plugin.sendMessage(sender, "&6Gender: &e" + gender);
+                Messages.sendMessage(sender, "&6Gender: &e" + gender);
 
-            Marriage.plugin.sendMessage(sender, "&6Status: &e" + status);
+            Messages.sendMessage(sender, "&6Status: &e" + status);
             if (status.equalsIgnoreCase(Status.MARRIED_TO_PERSON.toString()))
-                Marriage.plugin.sendMessage(sender, "&6Partner: &e" + partner);
+                Messages.sendMessage(sender, "&6Partner: &e" + partner);
         }catch (IllegalArgumentException e){
-            Marriage.plugin.sendMessage(sender, ChatColor.RED + e.getMessage());
+            Messages.sendMessage(sender, ChatColor.RED + e.getMessage());
         }
     }
 
@@ -321,18 +362,18 @@ public class CommandMarry
         	Marriage.plugin.getPlayerManager().addPlayer(partner);
             Marriage.plugin.getPlayerManager().setStatus(partner, Status.DIVORCED);
             Marriage.plugin.getPlayerManager().setPartner(partner, "");
-            Marriage.plugin.getPlayerManager().setTrustsPartner(partner, false);
+            Marriage.plugin.getPlayerManager().setIsSharedInvOpen(partner, false);
             Marriage.plugin.getPlayerManager().removeHome(partner);
             Marriage.plugin.getPlayerManager().setPartnerChat(partner, false);
-            Marriage.plugin.sendMessage(partner, Messages.divorce);
+            Messages.sendMessage(partner, Messages.divorce);
         }
 
         Marriage.plugin.getPlayerManager().setStatus(player, Status.DIVORCED);
         Marriage.plugin.getPlayerManager().setPartner(player, "");
-        Marriage.plugin.getPlayerManager().setTrustsPartner(player, false);
+        Marriage.plugin.getPlayerManager().setIsSharedInvOpen(player, false);
         Marriage.plugin.getPlayerManager().removeHome(player);
         Marriage.plugin.getPlayerManager().setPartnerChat(player, false);
-        Marriage.plugin.sendMessage(player, Messages.divorce);
+        Messages.sendMessage(player, Messages.divorce);
 
         return true;
     }
