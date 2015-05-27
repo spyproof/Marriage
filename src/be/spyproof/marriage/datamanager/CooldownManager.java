@@ -1,7 +1,7 @@
 package be.spyproof.marriage.datamanager;
 
 import be.spyproof.marriage.Marriage;
-import be.spyproof.marriage.handlers.Permissions;
+import be.spyproof.marriage.Permissions;
 import org.bukkit.command.CommandSender;
 
 import java.util.ArrayList;

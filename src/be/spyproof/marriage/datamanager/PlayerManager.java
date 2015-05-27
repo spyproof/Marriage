@@ -1,9 +1,11 @@
 package be.spyproof.marriage.datamanager;
 
 import be.spyproof.marriage.Gender;
+import be.spyproof.marriage.Messages;
 import be.spyproof.marriage.Status;
 
 import org.bukkit.Location;
+import org.bukkit.World;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -40,9 +42,9 @@ public class PlayerManager
     	}
     }
 
-    public Map<String, PlayerData> getLoadedPlayers()
+    public ArrayList<PlayerData> getLoadedPlayers()
     {
-        return playerData;
+        return (ArrayList<PlayerData>) playerData.values();
     }
 
     /**
@@ -88,11 +90,7 @@ public class PlayerManager
 
     public void reload()
     {
-        //reload(playerData.keySet().toArray(new String[playerData.size()]));
-        String[] names = new String[playerData.size()];
-        for (int i = 0; i < playerData.size(); i++)
-            names[i] = (String) playerData.keySet().toArray()[i];
-        reload(names);
+        reload(playerData.keySet().toArray(new String[playerData.size()]));
     }
 
     /**
@@ -135,17 +133,13 @@ public class PlayerManager
             return playerData.getPartner();
     }
 
-    public boolean isSharedInvOpen(String name)
+    public boolean trustsPartner(String name)
     {
-        name = name.toLowerCase();
-        if (playerData.containsKey(name))
-        {
-            return playerData.get(name).isSharedInvOpen();
-        }
-        else
-        {
+        PlayerData playerData = getPlayerData(name);
+        if (playerData == null)
             return false;
-        }
+        else
+            return playerData.trustsPartner();
     }
 
     public boolean isHomeSet(String name)
@@ -250,14 +244,11 @@ public class PlayerManager
         updatePlayerData(player);
     }
 
-    public void setIsSharedInvOpen(String name, boolean isSharedInvOpen)
+    public void setTrustsPartner(String name, boolean trustsPartner)
     {
         PlayerData player = getPlayerData(name);
-        if (player != null)
-        {
-            player.setIsSharedInvOpen(isSharedInvOpen);
-            updatePlayerData(player);
-        }
+        player.setTrustsPartner(trustsPartner);
+        updatePlayerData(player);
     }
 
     public void setBalance(String name, Double balance)
@@ -315,18 +306,15 @@ public class PlayerManager
 
     public void setPartnerChat(String name, boolean chat)
     {
-        PlayerData player = this.playerData.get(name);
-        if (player != null)
-        {
-            player.setPartnerChat(chat);
-            updatePlayerData(player);
-        }
+        PlayerData player = getPlayerData(name);
+        player.setPartnerChat(chat);
+        updatePlayerData(player);
     }
 
     private void updatePlayerData(PlayerData player)
     {
-        if (playerData.containsKey(player.getName().toLowerCase()))
-            playerData.remove(player.getName().toLowerCase());
-        playerData.put(player.getName().toLowerCase(), player);
+        if (playerData.containsKey(player.getName()))
+            playerData.remove(player.getName());
+        playerData.put(player.getName(), player);
     }
 }

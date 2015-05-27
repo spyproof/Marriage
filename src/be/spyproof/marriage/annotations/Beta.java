@@ -1,6 +1,6 @@
 package be.spyproof.marriage.annotations;
 
-import be.spyproof.marriage.handlers.Messages;
+import be.spyproof.marriage.Messages;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

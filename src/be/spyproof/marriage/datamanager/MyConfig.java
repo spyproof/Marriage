@@ -1,6 +1,5 @@
 package be.spyproof.marriage.datamanager;
 
-import be.spyproof.marriage.handlers.Messages;
 import org.bukkit.Color;
 import org.bukkit.configuration.Configuration;
 import org.bukkit.configuration.InvalidConfigurationException;
@@ -32,7 +31,6 @@ public class MyConfig
 
     public MyConfig(FileConfiguration config, File path, Configuration defaultFilePath)
     {
-        //TODO initialize file WITH COMMENTS
         this.config = config;
         this.configPath = path;
         this.values = new HashMap<String, Object>();
@@ -68,10 +66,7 @@ public class MyConfig
             this.config.load(configPath);
             this.values.clear();
             for (String s : config.getKeys(true))
-            {
                 this.values.put(s, config.get(s));
-                Messages.sendDebugInfo(s + " : " + config.get(s).toString());
-            }
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -147,7 +142,7 @@ public class MyConfig
     public boolean getBoolean(String path)
     {
         Object o = this.values.get(path);
-        if (o instanceof Boolean)
+        if (o instanceof Float)
             return (Boolean) o;
         return false;
     }

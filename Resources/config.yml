@@ -18,24 +18,14 @@ broadcast-prefix: '&b&l[&2&lMarriageEC&b&l]'
 # Homes, shared money and last seen are linked per server name
 server_name: default
 
-# Smites the partner upon the death of his/her partner
-smite-on-partner-dead: true
-
 # Unlock the following /partner <command> after having a bank value of...
-unlock:
-  command:
-    seen: 0
-    info: 1000
-    chat: 5000
-    tp: 10000
-    home: 50000
-    chest: 75000
-  perk:
-    prefix: 0
-    login-message: 15000
-    teleport-effects: 25000
-    no-smite-on-partner-dead: 40000
-    hearts: 60000
+unlock-command:
+  info: 1000
+  seen: 5000
+  chat: 10000
+  tp: 20000
+  home: 50000
+  inventory: 100000
 
 # MySQL
 database: DBname

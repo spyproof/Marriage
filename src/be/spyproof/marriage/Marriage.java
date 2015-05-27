@@ -6,18 +6,17 @@ package be.spyproof.marriage;
  */
 
 import be.spyproof.marriage.commands.*;
+import be.spyproof.marriage.commands.CommandHandler;
 import be.spyproof.marriage.datamanager.CooldownManager;
 import be.spyproof.marriage.datamanager.MyConfig;
-import be.spyproof.marriage.datamanager.PlayerData;
+import be.spyproof.marriage.listeners.CommandListener;
 import be.spyproof.marriage.datamanager.PlayerManager;
-import be.spyproof.marriage.handlers.CommandHandler;
-import be.spyproof.marriage.handlers.Messages;
-import be.spyproof.marriage.listeners.*;
-import de.slikey.effectlib.EffectLib;
-import de.slikey.effectlib.EffectManager;
+import be.spyproof.marriage.listeners.PlayerListener;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.World;
+import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
+import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -32,60 +31,20 @@ public class Marriage extends JavaPlugin
     private PlayerListener playerListener;
     private CommandHandler commandHandler;
 
+    private static List<String> debuggers = new ArrayList<String>();
     public static Marriage plugin;
     public static Economy eco;
     public static MyConfig config;
 
-    public EffectLib lib = EffectLib.instance();
-    public EffectManager effectManager = new EffectManager(lib);
-
     /**
      * TODO Random ideas
-     *  - Perk interface (inventory)
+     *  - Cake!
+     *  - Soft depend HeroChat & WorldGuard
+     *  - Command interface (inventory)
      *  - Family tree (implement family stuff)
      *  - Heart effects
      *  - Shared bank hooked into the economy
-     *
-     *  - Shared donator perks
-     *    - heal
-     *    - give exp to partner
-     *    - give item
      */
-
-    /**
-     * Override
-     */
-
-    @Override
-    public void onEnable()
-    {
-        plugin = this;
-        this.saveDefaultConfig();
-        config = new MyConfig(this.getConfig(), new File(this.getDataFolder(), "config.yml"));
-        new Messages();
-        new CooldownManager();
-        this.playerManager = new PlayerManager();
-        this.playerListener = new PlayerListener();
-        this.commandListener = new CommandListener();
-        this.commandHandler = new CommandHandler();
-        setupEconomy();
-        registerListeners();
-        registerCommands();
-    }
-
-    @Override
-    public void onDisable()
-    {
-        for (PlayerData p : this.playerManager.getLoadedPlayers().values())
-        {
-            p.setLastSeen(System.currentTimeMillis());
-            this.playerManager.getLoadedPlayers().put(p.getName().toLowerCase(), p);
-        }
-
-        this.playerManager.saveAllPlayers();
-        this.playerManager.closeDB();
-        //config.save();
-    }
 
     /**
      * public
@@ -94,6 +53,30 @@ public class Marriage extends JavaPlugin
     public PlayerManager getPlayerManager()
     {
     	return this.playerManager;
+    }
+    
+    public void toggleDebugger(String name)
+    {
+        if (debuggers.contains(name))
+            debuggers.remove(name);
+        else
+            debuggers.add(name);
+    }
+
+    public void sendDebugInfo(String message)
+    {
+        for (String p : debuggers)
+        {
+            CommandSender player = null;
+            if (p.equals("CONSOLE"))
+                player = this.getServer().getConsoleSender();
+            else
+                player = getPlayer(p);
+
+            String prefix = "&e[&a&lDebug&e] &3";
+            if (player != null)
+                sendMessage(player, prefix + message.replace("\n", "\n"+prefix));
+        }
     }
 
     @SuppressWarnings("deprecation")
@@ -113,9 +96,48 @@ public class Marriage extends JavaPlugin
     	return players;
     }
 
-    public boolean isPluginEnabled(String pluginName)
+    public void sendMessage(CommandSender sender, String message)
     {
-        return this.getServer().getPluginManager().isPluginEnabled(pluginName);
+        message = message.replace("\\n", "\n").replace("{prefix}", Messages.prefix);
+
+        sender.sendMessage(ChatColor.translateAlternateColorCodes('&', message));
+    }
+
+    public void sendMessage(String sender, String message)
+    {
+        Player p = getPlayer(sender);
+        if (p != null)
+            sendMessage(p, message);
+    }
+
+    /**
+     * Override
+     */
+
+    @Override
+    public void onEnable()
+    {
+        this.saveDefaultConfig();
+    	plugin = this;
+        config = new MyConfig(this.getConfig(), new File(this.getDataFolder(), "config.yml"));
+        new CooldownManager();
+    	this.playerManager = new PlayerManager();
+        this.playerListener = new PlayerListener();
+        this.commandListener = new CommandListener();
+        this.commandHandler = new CommandHandler();
+        setupEconomy();
+        registerListeners();
+        registerCommands();
+
+
+    }
+
+    @Override
+    public void onDisable()
+    {
+        this.playerManager.saveAllPlayers();
+        this.playerManager.closeDB();
+        //config.save();
     }
     
     /**
@@ -145,5 +167,10 @@ public class Marriage extends JavaPlugin
         }
 
         return (eco != null);
+    }
+
+    private void loadWorldGuard()
+    {
+
     }
 }

@@ -1,6 +1,6 @@
 package be.spyproof.marriage.listeners;
 
-import be.spyproof.marriage.handlers.CommandHandler;
+import be.spyproof.marriage.commands.CommandHandler;
 import org.bukkit.command.*;
 import org.bukkit.command.Command;
 

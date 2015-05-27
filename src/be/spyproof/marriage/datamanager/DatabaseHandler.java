@@ -2,9 +2,9 @@ package be.spyproof.marriage.datamanager;
 
 import be.spyproof.marriage.Marriage;
 import be.spyproof.marriage.Gender;
-import be.spyproof.marriage.handlers.Messages;
 import be.spyproof.marriage.Status;
 import org.bukkit.Bukkit;
+import org.bukkit.World;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -63,11 +63,11 @@ public class DatabaseHandler {
     	}
     	this.connectionString = "jdbc:mysql://"+this.host+this.port+"/"+this.database;
     	this.selectPlayerString = "SELECT * FROM "+table+" WHERE name = ?";
-    	this.selectPlayerDataString = "SELECT "+table+".name, gender, status, partner, server, home_set, home_world, home_x, home_y, home_z, home_pitch, home_yaw, last_seen, balance FROM "+table+","+serversTable+" WHERE "+table+".name = ? AND "+serversTable+".server = ? GROUP BY "+table+".name";
+    	this.selectPlayerDataString = "SELECT "+table+".name, gender, status, partner, trusts_partner, server, home_set, home_world, home_x, home_y, home_z, home_pitch, home_yaw, last_seen, balance FROM "+table+","+serversTable+" WHERE "+table+".name = ? AND "+serversTable+".server = ? GROUP BY "+table+".name";
     	this.selectPlayerServerString = "SELECT * FROM "+serversTable+" WHERE name = ? AND server = ?";
-    	this.insertPlayerString = "INSERT INTO "+table+" SET name = ?, gender = ?, status = ?, partner = ?";
+    	this.insertPlayerString = "INSERT INTO "+table+" SET name = ?, gender = ?, status = ?, partner = ?, trusts_partner = ?";
     	this.insertPlayerServerString = "INSERT INTO "+serversTable+" SET name = ?, server = ?, home_set = ?, home_world = ?, home_x = ?, home_y = ?, home_z = ?, home_pitch = ?, home_yaw = ?, last_seen = ?, balance = ?";
-    	this.updatePlayerString = "UPDATE "+table+" SET gender = ?, status = ?, partner = ? WHERE name = ?";
+    	this.updatePlayerString = "UPDATE "+table+" SET gender = ?, status = ?, partner = ?, trusts_partner = ? WHERE name = ?";
     	this.updatePlayerServerString = "UPDATE "+serversTable+" SET home_set = ?, home_world = ?, home_x = ?, home_y = ?, home_z = ?, home_pitch = ?, home_yaw = ?, last_seen = ?, balance = ? WHERE name = ? AND server = ?";
     	this.deletePlayerString = "DELETE FROM "+table+" WHERE name = ?";
     	this.deletePlayerServerString = "DELETE FROM "+serversTable+" WHERE name = ? AND server = ?";
@@ -80,6 +80,7 @@ public class DatabaseHandler {
 				"gender VARCHAR(16),"+
 				"status VARCHAR(32),"+
 				"partner VARCHAR(32),"+
+				"trusts_partner BOOLEAN,"+
 				"PRIMARY KEY (name))");
 			prepStatement.executeUpdate();
 			prepStatement = connection.prepareStatement(
@@ -141,7 +142,8 @@ public class DatabaseHandler {
 						player.getName().toLowerCase(), 
 						player.getGender().toString(), 
 						player.getStatus().toString(),
-						player.getPartner()};
+						player.getPartner(),
+						player.trustsPartner()};
 				executeQuery(insertPlayerString, temp);
 			}
 			else
@@ -149,6 +151,7 @@ public class DatabaseHandler {
 					player.setGender(Gender.fromString(data.getString("gender")));
 					player.setStatus(Status.fromString(data.getString("status")));
 					player.setPartner(data.getString("partner"));
+					player.setTrustsPartner(data.getBoolean("trusts_partner"));
 			}
 		} catch (SQLException e) { e.printStackTrace(); }
 		finally
@@ -200,6 +203,7 @@ public class DatabaseHandler {
 				player.getGender().toString(), 
 				player.getStatus().toString(),
 				player.getPartner(),
+				player.trustsPartner(),
 				player.getName().toLowerCase()};
 		executeQuery(updatePlayerString, temp);
 
@@ -229,8 +233,8 @@ public class DatabaseHandler {
 						data.getString("name"), 
 						Gender.fromString(data.getString("gender")), 
 						Status.fromString(data.getString("status")), 
-						data.getString("partner"),
-						false,
+						data.getString("partner"), 
+						data.getBoolean("trusts_partner"), 
 						data.getBoolean("home_set"),
                         Bukkit.getWorld(data.getString("home_world")),
 						data.getInt("home_x"), 
@@ -287,7 +291,7 @@ public class DatabaseHandler {
 				}
 			}
 
-            Messages.sendDebugInfo(prepStatement.toString());
+            Marriage.plugin.sendDebugInfo(prepStatement.toString());
 			
 			ResultSet data;
 			if (query.equals(selectPlayerString) || query.equals(selectPlayerDataString) || query.equals(selectPlayerServerString))
