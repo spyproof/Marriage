@@ -63,7 +63,7 @@ public class DatabaseHandler {
     	}
     	this.connectionString = "jdbc:mysql://"+this.host+this.port+"/"+this.database;
     	this.selectPlayerString = "SELECT * FROM "+table+" WHERE name = ?";
-    	this.selectPlayerDataString = "SELECT "+table+".name, gender, status, partner, trusts_partner, server, home_set, home_world, home_x, home_y, home_z, home_pitch, home_yaw, last_seen, balance FROM "+table+","+serversTable+" WHERE "+table+".name = ? AND "+serversTable+".server = ? GROUP BY "+table+".name";
+    	this.selectPlayerDataString = "SELECT "+table+".name, gender, status, partner, trusts_partner, home_set, home_world, home_x, home_y, home_z, home_pitch, home_yaw, last_seen, balance FROM "+table+","+serversTable+" WHERE "+table+".name = ? AND "+serversTable+".server = ? GROUP BY "+table+".name";
     	this.selectPlayerServerString = "SELECT * FROM "+serversTable+" WHERE name = ? AND server = ?";
     	this.insertPlayerString = "INSERT INTO "+table+" SET name = ?, gender = ?, status = ?, partner = ?, trusts_partner = ?";
     	this.insertPlayerServerString = "INSERT INTO "+serversTable+" SET name = ?, server = ?, home_set = ?, home_world = ?, home_x = ?, home_y = ?, home_z = ?, home_pitch = ?, home_yaw = ?, last_seen = ?, balance = ?";
@@ -96,7 +96,7 @@ public class DatabaseHandler {
 	            "home_yaw FLOAT,"+
 	            "last_seen LONG,"+
 	            "balance DOUBLE,"+
-		        "PRIMARY KEY (name))");
+		        "PRIMARY KEY (name, server))");
 			prepStatement.executeUpdate();
 		}
 		catch (SQLException e) {

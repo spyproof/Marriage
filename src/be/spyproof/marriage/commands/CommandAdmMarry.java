@@ -383,7 +383,10 @@ public class CommandAdmMarry
             Messages.sendDebugInfo("&3Default: " + ParticleEffect.FLAME.getName());
             return ParticleEffect.FLAME;
         }else{
-            Messages.sendDebugInfo("&3" + arg + ": " + ParticleEffect.values()[arg]);
+            ParticleEffect p = ParticleEffect.values()[arg];
+            Messages.sendDebugInfo("&3" + arg + ": " + p);
+            if (p.equals(ParticleEffect.ICON_CRACK) || p.equals(ParticleEffect.BLOCK_CRACK) || p.equals(ParticleEffect.TILE_CRACK))
+                return ParticleEffect.FLAME;
             return ParticleEffect.values()[arg];
         }
     }

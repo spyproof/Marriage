@@ -5,7 +5,7 @@ author: TPNils & Idlehumor
 website: https://github.com/spyproof
 main: be.spyproof.marriage.Marriage
 depend: [Vault]
-softdepend: [Herochat, Essentials, EffectLib]
+softdepend: [Herochat, Essentials, EffectLib, WorldGuard]
 commands:
   marry:
     description: Marry commands

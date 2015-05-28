@@ -26,6 +26,8 @@ public class PlayerManager
     public void addPlayer(String name)
     {    	
     	name = name.toLowerCase();
+        if (playerData.containsKey(name))
+            return;
     	
     	PlayerData player = database.getPlayer(name);
     	if (player != null)

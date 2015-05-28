@@ -49,6 +49,7 @@ public class Messages
     public static final String heroChatPluginName = "Herochat";
     public static final String vaultPluginName = "Vault";
     public static final String worldGuardPluginName = "WorldGuard";
+    public static final String worldEditPluginName = "WorldEdit";
 
     private static List<String> debuggers = new ArrayList<String>();
 

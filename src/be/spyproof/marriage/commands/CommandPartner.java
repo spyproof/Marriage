@@ -10,6 +10,13 @@ import be.spyproof.marriage.handlers.CommandHandler;
 import be.spyproof.marriage.handlers.Messages;
 import be.spyproof.marriage.handlers.Permissions;
 import com.earth2me.essentials.Essentials;
+import com.sk89q.worldedit.Vector;
+import com.sk89q.worldguard.LocalPlayer;
+import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
+import com.sk89q.worldguard.protection.ApplicableRegionSet;
+import com.sk89q.worldguard.protection.flags.BooleanFlag;
+import com.sk89q.worldguard.protection.flags.DefaultFlag;
+import com.sk89q.worldguard.protection.flags.StateFlag;
 import de.slikey.effectlib.effect.AnimatedBallEffect;
 import de.slikey.effectlib.util.ParticleEffect;
 import org.bukkit.Bukkit;
@@ -21,7 +28,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.metadata.MetadataValue;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -363,6 +369,12 @@ public class CommandPartner
 
     private void teleport(final Player sender, Player receiver)
     {
+        try {
+            preTeleport(sender);
+        } catch (IllegalArgumentException e) {
+            Messages.sendMessage(sender, "&c"+e.getMessage());
+            return;
+        }
         if (Marriage.plugin.isPluginEnabled(Messages.effectsLibPluginName) && Permissions.hasMoney(sender, Permissions.unlockCommandTp))
         {
             final String receiverName = receiver.getName();
@@ -396,9 +408,10 @@ public class CommandPartner
 
     private void teleport(final Player sender, final Location loc)
     {
-        if (!preTeleport(sender))
-        {
-            Messages.sendMessage(sender, "&cYou are not allowed to teleport!");
+        try {
+            preTeleport(sender);
+        } catch (IllegalArgumentException e) {
+            Messages.sendMessage(sender, "&c"+e.getMessage());
             return;
         }
         if (Marriage.plugin.isPluginEnabled(Messages.effectsLibPluginName) && Permissions.hasMoney(sender, Permissions.unlockCommandTp))
@@ -427,17 +440,25 @@ public class CommandPartner
 
     }
 
-    //TODO check for pvp stuff
     private boolean preTeleport(Player sender)
     {
-        if (Marriage.plugin.isPluginEnabled(Messages.banManagerPluginName))
-            return false;
+        //Check if essentials jailed
         if (Marriage.plugin.isPluginEnabled(Messages.essentialsPluginName))
         {
             Essentials essentials = (Essentials) Marriage.plugin.getServer().getPluginManager().getPlugin(Messages.essentialsPluginName);
             if (essentials.getUser(sender).isJailed())
-                return false;
+                throw new IllegalArgumentException("You can not teleport while jailed!");
             essentials.getUser(sender).setLastLocation();
+        }
+
+        //Check for WorldGuard pvp
+        if (Marriage.plugin.isPluginEnabled(Messages.worldGuardPluginName) && Marriage.plugin.isPluginEnabled(Messages.worldEditPluginName))
+        {
+            WorldGuardPlugin wg = (WorldGuardPlugin) Marriage.plugin.getServer().getPluginManager().getPlugin(Messages.worldGuardPluginName);
+            LocalPlayer p = wg.wrapPlayer(sender);
+            ApplicableRegionSet regions =  wg.getRegionManager(sender.getWorld()).getApplicableRegions(p.getPosition());
+            if (regions.allows(DefaultFlag.PVP, p))
+                throw new IllegalArgumentException("You can not teleport in a PVP area!");
         }
 
         return true;
