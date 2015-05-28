@@ -255,11 +255,8 @@ public class PlayerManager
     public void setIsSharedInvOpen(String name, boolean isSharedInvOpen)
     {
         PlayerData player = getPlayerData(name);
-        if (player != null)
-        {
-            player.setIsSharedInvOpen(isSharedInvOpen);
-            updatePlayerData(player);
-        }
+        player.setIsSharedInvOpen(isSharedInvOpen);
+        updatePlayerData(player);
     }
 
     public void setBalance(String name, Double balance)
@@ -317,12 +314,9 @@ public class PlayerManager
 
     public void setPartnerChat(String name, boolean chat)
     {
-        PlayerData player = this.playerData.get(name);
-        if (player != null)
-        {
-            player.setPartnerChat(chat);
-            updatePlayerData(player);
-        }
+        PlayerData player = getPlayerData(name);
+        player.setPartnerChat(chat);
+        updatePlayerData(player);
     }
 
     private void updatePlayerData(PlayerData player)

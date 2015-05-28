@@ -302,9 +302,12 @@ public class CommandPartner
             perks.put(ChatColor.YELLOW + "Don't get smited when your partner dies", Marriage.config.getInt(Permissions.unlockPerkNoSmite));
 
         perks.put(ChatColor.YELLOW + "Chat prefix", Marriage.config.getInt(Permissions.unlockPerkPrefix));
-        perks.put(ChatColor.YELLOW + "Heart effects when walking near each other", Marriage.config.getInt(Permissions.unlockPerkHearts));
+        if (Marriage.plugin.isPluginEnabled(Messages.effectsLibPluginName))
+        {
+            perks.put(ChatColor.YELLOW + "Heart effects when walking near each other", Marriage.config.getInt(Permissions.unlockPerkHearts));
+            perks.put(ChatColor.YELLOW + "Cool teleporting effect", Marriage.config.getInt(Permissions.unlockPerkTeleportEffect));
+        }
         perks.put(ChatColor.YELLOW + "Receive a notification when your partner logs in", Marriage.config.getInt(Permissions.unlockPerkLoginMessage));
-        perks.put(ChatColor.YELLOW + "Cool teleporting effect", Marriage.config.getInt(Permissions.unlockPerkTeleportEffect));
 
         int invSize = perks.size()/9;
         if (perks.size()%9 != 0)

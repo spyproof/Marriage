@@ -41,6 +41,7 @@ public class Marriage extends JavaPlugin
 
     /**
      * TODO Random ideas
+     *  - whitelist myself for beta commands
      *  - Family tree (implement family stuff)
      *  - Shared bank hooked into the economy
      *
@@ -48,6 +49,9 @@ public class Marriage extends JavaPlugin
      *    - heal
      *    - give exp to partner
      *    - give item
+     *
+     * TODO Important
+     *  - on divorce, reset data on all servers
      */
 
     /**
@@ -69,6 +73,9 @@ public class Marriage extends JavaPlugin
         setupEconomy();
         registerListeners();
         registerCommands();
+
+        for (Player p : getOnlinePlayers())
+            playerManager.addPlayer(p.getName());
     }
 
     @Override

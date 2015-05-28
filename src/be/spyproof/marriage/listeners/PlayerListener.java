@@ -98,7 +98,6 @@ public class PlayerListener implements Listener
         if (Marriage.plugin.getPlayerManager().isPartnerChatOn(e.getPlayer().getName()))
         {
             e.setCancelled(true);
-
             //Check if muted
             if (Marriage.plugin.isPluginEnabled(Messages.essentialsPluginName))
             {
@@ -194,6 +193,9 @@ public class PlayerListener implements Listener
     public void onPlayerMove(PlayerMoveEvent e)
     {
         if (e.isCancelled())
+            return;
+
+        if (!Marriage.plugin.isPluginEnabled(Messages.effectsLibPluginName))
             return;
 
         if (lastMoveEvent.containsKey(e.getPlayer().getName()))

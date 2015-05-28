@@ -1,6 +1,7 @@
 package be.spyproof.marriage.commands;
 
 import be.spyproof.marriage.Marriage;
+import be.spyproof.marriage.annotations.Beta;
 import be.spyproof.marriage.datamanager.CooldownManager;
 import be.spyproof.marriage.datamanager.PlayerManager;
 import be.spyproof.marriage.handlers.CommandHandler;
@@ -154,6 +155,7 @@ public class CommandAdmMarry
         Messages.sendMessage(sender, "&eYou have reset the cooldowns of " + player);
     }
 
+    @Beta
     @Default({"1", "1", "1"})
     @Command(command = "admmarry", trigger = "effect", args = {"{int}", "{int}", "{int}"}, helpHidden = true, playersOnly = true)
     public void effects(final Player sender, String[] args)
