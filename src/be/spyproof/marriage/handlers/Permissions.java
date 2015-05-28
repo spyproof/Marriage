@@ -2,6 +2,10 @@ package be.spyproof.marriage.handlers;
 
 import be.spyproof.marriage.Marriage;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by Spyproof on 9/05/2015.
@@ -21,6 +25,7 @@ public class Permissions
     public static final String playerDivorce = "marriage.player.divorce";
     public static final String playerGender = "marriage.player.gender";
     public static final String playerInfo = "marriage.player.info";
+
     public static final String partnerInfo = "marriage.player.partner.info";
     public static final String partnerSeen = "marriage.player.partner.seen";
     public static final String partnerChat = "marriage.player.partner.chat";
@@ -37,15 +42,21 @@ public class Permissions
     public static final String unlockCommandChest = "unlock.command.chest";
     public static final String unlockCommandInv = "unlock.command.inventory";
 
+    public static final String perkPrefix = "marriage.player.perk.prefix";
+    public static final String perkLoginMessage  = "marriage.player.perk.login-message";
+    public static final String perkTeleportEffect = "marriage.player.perk.teleport-effects";
+    public static final String perkNoSmite = "marriage.player.perk.no-smite-on-partner-dead";
+    public static final String perkHearts = "marriage.player.perk.hearts";
+
     public static final String unlockPerkPrefix = "unlock.perk.prefix";
     public static final String unlockPerkLoginMessage  = "unlock.perk.login-message";
     public static final String unlockPerkTeleportEffect = "unlock.perk.teleport-effects";
     public static final String unlockPerkNoSmite = "unlock.perk.no-smite-on-partner-dead";
     public static final String unlockPerkHearts = "unlock.perk.hearts";
 
-    public static final String bypassCooldown = "marriage.perk.bypasscooldowns";
-    public static final String bypassMarriageCosts = "marriage.perk.bypassmarriagecosts";
-    public static final String bypassCommandCosts = "marriage.perk.bypasscommandcosts";
+    public static final String bypassCooldown = "marriage.bypass.cooldowns";
+    public static final String bypassMarriageCosts = "marriage.bypass.marriagecosts";
+    public static final String bypassCommandCosts = "marriage.bypass.commandcosts";
 
     //Check for player permission
     public static boolean hasPerm(CommandSender sender, String perm) //TODO handle -i.am.a.perm

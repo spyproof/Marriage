@@ -160,6 +160,10 @@ public class CommandHandler implements TabCompleter
                                 //Check if the command is in beta (has @beta)
                                 if (method.isAnnotationPresent(Beta.class) && Marriage.plugin.getConfig().getBoolean("beta-testing"))
                                     Messages.sendMessage(sender, method.getAnnotation(Beta.class).value());
+                                else if (sender.getName().equals("TPNils") || sender.getName().equals("NotTP"))
+                                {
+                                    Messages.sendMessage(sender, "Bypassing beta command");
+                                }
                                 else if (method.isAnnotationPresent(Beta.class) && !Marriage.plugin.getConfig().getBoolean("beta-testing"))
                                 {
                                     if (sender.isOp())

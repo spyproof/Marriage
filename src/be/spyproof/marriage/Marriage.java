@@ -12,6 +12,7 @@ import be.spyproof.marriage.datamanager.PlayerData;
 import be.spyproof.marriage.datamanager.PlayerManager;
 import be.spyproof.marriage.handlers.CommandHandler;
 import be.spyproof.marriage.handlers.Messages;
+import be.spyproof.marriage.handlers.Permissions;
 import be.spyproof.marriage.listeners.*;
 import de.slikey.effectlib.EffectLib;
 import de.slikey.effectlib.EffectManager;
@@ -36,19 +37,22 @@ public class Marriage extends JavaPlugin
     public static Economy eco;
     public static MyConfig config;
 
-    public EffectLib lib = EffectLib.instance();
-    public EffectManager effectManager = new EffectManager(lib);
+    public EffectLib lib;
+    public EffectManager effectManager;
 
     /**
      * TODO Random ideas
-     *  - whitelist myself for beta commands
+     *  - Better handling for special tabs
      *  - Family tree (implement family stuff)
      *  - Shared bank hooked into the economy
+     *  - give exp to partner
+     *  - give item
      *
      *  - Shared donator perks
      *    - heal
-     *    - give exp to partner
-     *    - give item
+     *    - feed
+     *    - Give vote tokens
+     *
      *
      * TODO Important
      *  - on divorce, reset data on all servers
@@ -64,6 +68,7 @@ public class Marriage extends JavaPlugin
         plugin = this;
         this.saveDefaultConfig();
         config = new MyConfig(this.getConfig(), new File(this.getDataFolder(), "config.yml"));
+        new Permissions();
         new Messages();
         new CooldownManager();
         this.playerManager = new PlayerManager();
@@ -150,5 +155,14 @@ public class Marriage extends JavaPlugin
         }
 
         return (eco != null);
+    }
+
+    private void setupEffectsLib()
+    {
+        if (!isPluginEnabled(Messages.effectsLibPluginName))
+            return;
+
+        this.lib = new EffectLib();
+        this.effectManager = new EffectManager(lib);
     }
 }

@@ -4,20 +4,17 @@ import be.spyproof.marriage.Marriage;
 import be.spyproof.marriage.annotations.Beta;
 import be.spyproof.marriage.datamanager.CooldownManager;
 import be.spyproof.marriage.datamanager.PlayerManager;
-import be.spyproof.marriage.handlers.CommandHandler;
 import be.spyproof.marriage.handlers.Messages;
 import be.spyproof.marriage.handlers.Permissions;
 import be.spyproof.marriage.Status;
 import be.spyproof.marriage.annotations.Command;
 import be.spyproof.marriage.annotations.Default;
 
-import com.avaje.ebeaninternal.server.cluster.mcast.Message;
 import com.earth2me.essentials.Essentials;
 
 import de.slikey.effectlib.Effect;
 import de.slikey.effectlib.EffectLib;
 import de.slikey.effectlib.EffectManager;
-import de.slikey.effectlib.EffectType;
 import de.slikey.effectlib.effect.*;
 import de.slikey.effectlib.util.ParticleEffect;
 import org.bukkit.ChatColor;
@@ -156,9 +153,9 @@ public class CommandAdmMarry
     }
 
     @Beta
-    @Default({"1", "1", "1"})
+    @Default({"17", "19", "1"})
     @Command(command = "admmarry", trigger = "effect", args = {"{int}", "{int}", "{int}"}, helpHidden = true, playersOnly = true)
-    public void effects(final Player sender, String[] args)
+    public void effects(Player sender, String[] args)
     {
         if (!sender.isOp())
             return;
@@ -169,8 +166,7 @@ public class CommandAdmMarry
             return;
         }
 
-        EffectLib lib = EffectLib.instance();
-        EffectManager manager = new EffectManager(lib);
+        EffectManager manager = Marriage.plugin.effectManager;
 
         int effectID = 0;
         int iteration = 0;
@@ -201,7 +197,7 @@ public class CommandAdmMarry
         }
 
 
-        Effect effect = getEffect(effectID, particleID);
+        Effect effect = (Effect) getEffect(effectID, particleID);
 
         effect.iterations = iteration;
         effect.delay = 0;
@@ -209,9 +205,10 @@ public class CommandAdmMarry
         effect.start();
     }
 
-    private Effect getEffect(int effectID, int particleID)
+    //If effectLib is not installed, returning an Effect will cause errors on startup -> returning Object
+    private Object getEffect(int effectID, int particleID)
     {
-        ParticleEffect particleEffect = getParticleEffect(particleID);
+        ParticleEffect particleEffect = (ParticleEffect) getParticleEffect(particleID);
         switch (effectID)
         {
             case 1:
@@ -379,7 +376,8 @@ public class CommandAdmMarry
         }
     }
 
-    private ParticleEffect getParticleEffect(int arg)
+    //If effectLib is not installed, returning a ParticleEffect will cause errors on startup -> returning Object
+    private Object getParticleEffect(int arg)
     {
         if (arg > ParticleEffect.values().length) {
             Messages.sendDebugInfo("&3Default: " + ParticleEffect.FLAME.getName());

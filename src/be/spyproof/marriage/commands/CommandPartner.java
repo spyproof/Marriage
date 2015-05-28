@@ -297,7 +297,7 @@ public class CommandPartner
             return;
         }
 
-        Map<String, Integer> perks = new HashMap<String, Integer>();
+        Map<String, Integer> perks = new HashMap<String, Integer>(); //TODO permissions
         if (Marriage.config.getBoolean("smite-on-partner-dead"))
             perks.put(ChatColor.YELLOW + "Don't get smited when your partner dies", Marriage.config.getInt(Permissions.unlockPerkNoSmite));
 
@@ -342,7 +342,7 @@ public class CommandPartner
     }
 
     @Default("1")
-    @Command(command = "partner", trigger = "help", args = {"{int}"}, playersOnly = true, permission = Permissions.partnerMoney, helpHidden = true)
+    @Command(command = "partner", trigger = "help", args = {"{int}"}, playersOnly = true, helpHidden = true)
     public void help(CommandSender sender, String page)
     {
         if (!playerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))
