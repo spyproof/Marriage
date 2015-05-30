@@ -1,30 +1,28 @@
 package be.spyproof.marriage.listeners;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-
 import be.spyproof.marriage.Marriage;
+import be.spyproof.marriage.Status;
 import be.spyproof.marriage.exceptions.PermissionException;
 import be.spyproof.marriage.handlers.Messages;
 import be.spyproof.marriage.handlers.Permissions;
-import be.spyproof.marriage.Status;
-
 import com.earth2me.essentials.Essentials;
-
-import de.slikey.effectlib.effect.*;
+import de.slikey.effectlib.effect.LoveEffect;
 import me.confuser.banmanager.BmAPI;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.*;
-import org.bukkit.entity.Player;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 
 /**
  * Created by Spyproof on 3/04/2015.

@@ -1,16 +1,12 @@
 package be.spyproof.marriage.datamanager;
 
-import be.spyproof.marriage.Marriage;
 import be.spyproof.marriage.Gender;
-import be.spyproof.marriage.handlers.Messages;
+import be.spyproof.marriage.Marriage;
 import be.spyproof.marriage.Status;
+import be.spyproof.marriage.handlers.Messages;
 import org.bukkit.Bukkit;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 
 /**
  * Created by Idlehumor

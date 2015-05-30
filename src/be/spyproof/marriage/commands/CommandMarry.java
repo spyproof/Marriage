@@ -1,6 +1,8 @@
 package be.spyproof.marriage.commands;
 
-import be.spyproof.marriage.*;
+import be.spyproof.marriage.Gender;
+import be.spyproof.marriage.Marriage;
+import be.spyproof.marriage.Status;
 import be.spyproof.marriage.annotations.Command;
 import be.spyproof.marriage.annotations.Default;
 import be.spyproof.marriage.annotations.SpecialArgs;
@@ -50,7 +52,8 @@ public class CommandMarry
             Player sadPlayer = Marriage.plugin.getPlayer(this.offers.get(sender.getName().toLowerCase())); //sadPartner = player who did /marry <player>
 
             Messages.sendMessage(sender, ChatColor.RED + "You rejected " + sadPlayer.getName() + "'s marriage request");
-            Messages.sendMessage(sadPlayer, ChatColor.RED + sender.getName() + " rejected your marriage request ☹");
+            if (sadPlayer != null)
+                Messages.sendMessage(sadPlayer, ChatColor.RED + sender.getName() + " rejected your marriage request ☹");
 
             this.timeout.remove(this.offers.get(sender.getName().toLowerCase()));
             this.offers.remove(sender.getName().toLowerCase());
@@ -153,7 +156,7 @@ public class CommandMarry
             Bukkit.broadcastMessage(ChatColor.translateAlternateColorCodes('&', broadcast));
 
             Messages.sendMessage(sender, "&eUse &6&l/partner&e for your new perks!");
-            Messages.sendMessage(Marriage.plugin.getPlayer(newPartner), "&eUse &6&l/partner&e for your new perks!");
+            Messages.sendMessage(newPartner, "&eUse &6&l/partner&e for your new perks!");
 
             this.offers.remove(sender.getName().toLowerCase());
         }catch (IllegalArgumentException e){

@@ -6,13 +6,8 @@ package be.spyproof.marriage;
  */
 
 import be.spyproof.marriage.commands.*;
-import be.spyproof.marriage.datamanager.CooldownManager;
-import be.spyproof.marriage.datamanager.MyConfig;
-import be.spyproof.marriage.datamanager.PlayerData;
-import be.spyproof.marriage.datamanager.PlayerManager;
-import be.spyproof.marriage.handlers.CommandHandler;
-import be.spyproof.marriage.handlers.Messages;
-import be.spyproof.marriage.handlers.Permissions;
+import be.spyproof.marriage.datamanager.*;
+import be.spyproof.marriage.handlers.*;
 import be.spyproof.marriage.listeners.*;
 import de.slikey.effectlib.EffectLib;
 import de.slikey.effectlib.EffectManager;
@@ -107,7 +102,7 @@ public class Marriage extends JavaPlugin
     public Player getPlayer(String player)
     {
         for (Player p : getOnlinePlayers())
-            if (p.getName().equalsIgnoreCase(player))
+            if (p.getName().toLowerCase().startsWith(player.toLowerCase()))
                 return p;
         return null;
     }

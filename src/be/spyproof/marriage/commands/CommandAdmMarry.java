@@ -2,16 +2,13 @@ package be.spyproof.marriage.commands;
 
 import be.spyproof.marriage.Marriage;
 import be.spyproof.marriage.annotations.Beta;
+import be.spyproof.marriage.annotations.Command;
+import be.spyproof.marriage.annotations.Default;
 import be.spyproof.marriage.datamanager.CooldownManager;
 import be.spyproof.marriage.datamanager.PlayerManager;
 import be.spyproof.marriage.handlers.Messages;
 import be.spyproof.marriage.handlers.Permissions;
-import be.spyproof.marriage.Status;
-import be.spyproof.marriage.annotations.Command;
-import be.spyproof.marriage.annotations.Default;
-
 import com.earth2me.essentials.Essentials;
-
 import de.slikey.effectlib.Effect;
 import de.slikey.effectlib.EffectManager;
 import de.slikey.effectlib.effect.*;
@@ -19,8 +16,8 @@ import de.slikey.effectlib.util.ParticleEffect;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
-import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.PluginDescriptionFile;
 
 /**
  * Created by Nils on 3/04/2015.

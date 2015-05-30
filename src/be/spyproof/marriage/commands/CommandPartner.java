@@ -1,11 +1,11 @@
 package be.spyproof.marriage.commands;
 
-import be.spyproof.marriage.*;
+import be.spyproof.marriage.Marriage;
+import be.spyproof.marriage.Status;
 import be.spyproof.marriage.annotations.Beta;
 import be.spyproof.marriage.annotations.Command;
 import be.spyproof.marriage.annotations.Default;
 import be.spyproof.marriage.datamanager.PlayerManager;
-
 import be.spyproof.marriage.exceptions.PermissionException;
 import be.spyproof.marriage.handlers.CommandHandler;
 import be.spyproof.marriage.handlers.Messages;
@@ -21,8 +21,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.entity.Player;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;

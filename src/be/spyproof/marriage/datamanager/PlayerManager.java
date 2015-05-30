@@ -3,9 +3,7 @@ package be.spyproof.marriage.datamanager;
 import be.spyproof.marriage.Gender;
 import be.spyproof.marriage.Marriage;
 import be.spyproof.marriage.Status;
-
 import be.spyproof.marriage.handlers.Messages;
-import com.sun.xml.internal.ws.addressing.v200408.MemberSubmissionWsaServerTube;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 

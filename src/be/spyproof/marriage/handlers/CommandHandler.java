@@ -4,7 +4,6 @@ import be.spyproof.marriage.Marriage;
 import be.spyproof.marriage.annotations.Beta;
 import be.spyproof.marriage.annotations.Command;
 import be.spyproof.marriage.annotations.Default;
-
 import be.spyproof.marriage.annotations.SpecialArgs;
 import be.spyproof.marriage.exceptions.PermissionException;
 import org.bukkit.ChatColor;
@@ -15,7 +14,10 @@ import org.bukkit.entity.Player;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by Nils on 4/05/2015.
@@ -27,8 +29,6 @@ public class CommandHandler implements TabCompleter, CommandExecutor
     private static Map<Command, Method> commandMap = new HashMap<Command, Method>();
     private static Map<Method, Object> instances = new HashMap<Method, Object>();
     private static List<String> addedCommands = new ArrayList<String>();
-    //private static List<Method> specialArgsMethods = new ArrayList<Method>();
-    //private static List<String> specialArgs = new ArrayList<String>();
     private static Map<String, Method> argsMethods = new HashMap<String, Method>();
 
     public static CommandHandler getCommandHandler() {
