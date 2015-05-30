@@ -221,7 +221,7 @@ public class CommandMarry
     }
 
     //TODO add money to desc somehow
-    @Command(command = "marry", trigger = "{onlinePlayer}", args = {}, playersOnly = true, permission = Permissions.playerMarryOther, desc = "Marry a player", usage = "/marry <name>")
+    @Command(command = "marry", trigger = "{onlineplayer}", args = {}, playersOnly = true, permission = Permissions.playerMarryOther, desc = "Marry a player", usage = "/marry <name>")
     public void sendMarriageRequestPlayer(Player sender, String receiverName)
     {
         Player receiver = Marriage.plugin.getPlayer(receiverName);
@@ -357,37 +357,30 @@ public class CommandMarry
         }
     }
 
-    /**
-     * @return Map<specialTab, listOfPossibilities>
-     */
-    @SpecialArgs
-    public Map<String, List<String>> getGlobalArgs()
+    @SpecialArgs("{player}")
+    public List<String> argsPlayer()
     {
-        Map<String, List<String>> possibleArgs = new HashMap<String, List<String>>();
+        return null;
+    }
 
-        List<String> tabs = new ArrayList<String>();
-        possibleArgs.put("{player}", null);
+    @SpecialArgs("{onlineplayer}")
+    public List<String> argsOnlinePlayer()
+    {
+        List<String> possibleArgs = new ArrayList<String>();
 
         for (Player p : Marriage.plugin.getOnlinePlayers())
-            tabs.add(p.getName());
-        possibleArgs.put("{onlinePlayer}", tabs);
+            possibleArgs.add(p.getName());
 
         return possibleArgs;
     }
 
-    /**
-     * @return Map<specialTab, listOfPossibilities>
-     */
-    @SpecialArgs
-    public Map<String, List<String>> getLocalArgs()
+    @SpecialArgs("{gender}")
+    public List<String> argsGender()
     {
-        Map<String, List<String>> possibleArgs = new HashMap<String, List<String>>();
-
-        List<String> tabs = new ArrayList<String>();
+        List<String> possibleArgs = new ArrayList<String>();
 
         for (Gender g : Gender.values())
-            tabs.add(g.toString());
-        possibleArgs.put("{gender}", tabs);
+            possibleArgs.add(g.toString());
 
         return possibleArgs;
     }

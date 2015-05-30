@@ -11,7 +11,6 @@ import be.spyproof.marriage.handlers.Messages;
 import be.spyproof.marriage.handlers.Permissions;
 import be.spyproof.marriage.Status;
 
-import com.dthielke.herochat.ChannelChatEvent;
 import com.earth2me.essentials.Essentials;
 
 import de.slikey.effectlib.effect.*;
@@ -217,15 +216,19 @@ public class PlayerListener implements Listener
     @EventHandler
     public void onInventoryClick(InventoryClickEvent e)
     {
-        if (ChatColor.stripColor(e.getInventory().getName()).equalsIgnoreCase(ChatColor.stripColor(Messages.perkInvName)))
-            e.setCancelled(true);
+        if (e.getInventory() != null)
+            if (e.getInventory().getName() != null)
+                if (ChatColor.stripColor(e.getInventory().getName()).equalsIgnoreCase(ChatColor.stripColor(Messages.perkInvName)))
+                    e.setCancelled(true);
     }
 
     @EventHandler
-    public void onInventory(InventoryDragEvent e)
+    public void onInventoryDrag(InventoryDragEvent e)
     {
-        if (ChatColor.stripColor(e.getInventory().getName()).equalsIgnoreCase(ChatColor.stripColor(Messages.perkInvName)))
-            e.setCancelled(true);
+        if (e.getInventory() != null)
+            if (e.getInventory().getName() != null)
+                if (ChatColor.stripColor(e.getInventory().getName()).equalsIgnoreCase(ChatColor.stripColor(Messages.perkInvName)))
+                    e.setCancelled(true);
     }
 
     private void playerDisconnected(Player player)

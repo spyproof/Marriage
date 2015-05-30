@@ -13,8 +13,10 @@ import java.lang.annotation.Target;
 public @interface SpecialArgs
 {
     /**
-     * Methods with this annotation will return a Map<String, List<String>>
-     * The first string will define a argument (ex. {player})
+     * Methods with this annotation will return a List<String>
+     * The value string will define a argument (ex. {player})
      * The List will define options to replace the original string
      */
+
+    String value();
 }

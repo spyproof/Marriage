@@ -130,7 +130,6 @@ public class CommandPartner
             return;
         }
 
-        //TODO check for pvp stuff
         final String partnerName = playerManager.getPartner(sender.getName());
         Player partner = Marriage.plugin.getPlayer(partnerName);
         if (partner == null)

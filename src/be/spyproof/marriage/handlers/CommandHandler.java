@@ -7,8 +7,8 @@ import be.spyproof.marriage.annotations.Default;
 
 import be.spyproof.marriage.annotations.SpecialArgs;
 import be.spyproof.marriage.exceptions.PermissionException;
-import com.avaje.ebeaninternal.server.cluster.mcast.Message;
 import org.bukkit.ChatColor;
+import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
@@ -21,20 +21,35 @@ import java.util.*;
  * Created by Nils on 4/05/2015.
  * Command handling inspired by https://github.com/Zenith-
  */
-public class CommandHandler implements TabCompleter
+public class CommandHandler implements TabCompleter, CommandExecutor
 {
     private static CommandHandler commandHandler = new CommandHandler();
     private static Map<Command, Method> commandMap = new HashMap<Command, Method>();
     private static Map<Method, Object> instances = new HashMap<Method, Object>();
     private static List<String> addedCommands = new ArrayList<String>();
-    private static List<Method> specialArgsMethods = new ArrayList<Method>();
-    private static List<String> specialArgs = new ArrayList<String>();
+    //private static List<Method> specialArgsMethods = new ArrayList<Method>();
+    //private static List<String> specialArgs = new ArrayList<String>();
+    private static Map<String, Method> argsMethods = new HashMap<String, Method>();
 
     public static CommandHandler getCommandHandler() {
         return commandHandler;
     }
 
-    //Register the command handling
+    @Override
+    public boolean onCommand(CommandSender commandSender, org.bukkit.command.Command command, String s, String[] strings)
+    {
+        if (strings.length != 0)
+        {
+            String[] args = new String[strings.length - 1];
+            System.arraycopy(strings, 1, args, 0, args.length);
+            callCommand(command.getName(), strings[0], commandSender, args);
+        }else {
+            callCommand(command.getName(), "", commandSender, strings);
+        }
+
+        return true;
+    }
+
     @SuppressWarnings("rawtypes")
 	public void registerCommands(Class commandClass)
     {
@@ -45,12 +60,13 @@ public class CommandHandler implements TabCompleter
             {
                 if (m.isAnnotationPresent(Command.class))
                 {
-                    String command = m.getAnnotation(Command.class).command();
+                    String command = m.getAnnotation(Command.class).command().toLowerCase();
                     if (!addedCommands.contains(command))
                     {
                         //Register tab completion for the command
                         addedCommands.add(command);
                         Marriage.plugin.getCommand(command).setTabCompleter(this);
+                        Marriage.plugin.getCommand(command).setExecutor(this);
                     }
                     //Link the @Command with the method
                     commandMap.put(m.getAnnotation(Command.class), m);
@@ -60,20 +76,11 @@ public class CommandHandler implements TabCompleter
 
                 if (m.isAnnotationPresent(SpecialArgs.class))
                 {
-                    if (!specialArgsMethods.contains(m))
+                    String arg = m.getAnnotation(SpecialArgs.class).value();
+                    if (!argsMethods.containsKey(arg))
                     {
-                        try
-                        {
-                            HashMap<String, List<String>> map = (HashMap<String, List<String>>) m.invoke(o);
-                            for (String s : (map.keySet()))
-                                specialArgs.add(s);
-
-                            specialArgsMethods.add(m);
-                            instances.put(m, o);
-                        } catch (InvocationTargetException e)
-                        {
-                            e.printStackTrace();
-                        }
+                        argsMethods.put(arg, m);
+                        instances.put(m, o);
                     }
                 }
             }
@@ -416,23 +423,20 @@ public class CommandHandler implements TabCompleter
 
     private boolean isSpecial(String arg)
     {
-        return specialArgs.contains(arg);
+        return argsMethods.containsKey(arg);
     }
 
     private List<String> specialArgs(String arg)
     {
         //Replace the special tabs
-        List<String> tabs = new ArrayList<String>();
+        //List<String> tabs = new ArrayList<String>();
 
-        for (Method m : specialArgsMethods)
+        if (argsMethods.containsKey(arg))
         {
             try
             {
-                HashMap<String, List<String>> args = (HashMap<String, List<String>>) m.invoke(instances.get(m));
-                for (String s : args.keySet())
-                    if (s.equalsIgnoreCase(arg))
-                        if (args.get(s) != null)
-                            tabs.addAll(args.get(s));
+                Method m = argsMethods.get(arg);
+                return (List<String>) m.invoke(instances.get(m));
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
             } catch (InvocationTargetException e) {
@@ -440,7 +444,7 @@ public class CommandHandler implements TabCompleter
             }
         }
 
-        return tabs;
+        return null;
     }
 
     private Method getCommandMethod(String command, String trigger)

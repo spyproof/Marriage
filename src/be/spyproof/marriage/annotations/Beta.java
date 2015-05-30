@@ -11,7 +11,7 @@ import java.lang.annotation.Target;
  * Created by Spyproof on 8/05/2015.
  */
 @Target(ElementType.METHOD)
-@Retention(RetentionPolicy.RUNTIME) //TODO testing enum
+@Retention(RetentionPolicy.RUNTIME)
 public @interface Beta {
     String value() default Messages.betaCommand;
 }

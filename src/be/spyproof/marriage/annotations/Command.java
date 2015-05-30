@@ -13,7 +13,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Command
 {
-    //TODO {} = special / - = hiding
     String command();
 
     String trigger();

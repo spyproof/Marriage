@@ -89,9 +89,6 @@ public class CommandAdmMarry
             Messages.sendMessage(sender, "&6Gender: &e" + gender);
             Messages.sendMessage(sender, "&6Status: &e" + status);
 
-            if (!playerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))
-                return;
-
             Messages.sendMessage(sender, "&6Partner: &e" + partner);
             Messages.sendMessage(sender, "&6Balance: &e$" + balance);
 

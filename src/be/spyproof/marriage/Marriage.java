@@ -29,7 +29,6 @@ import java.util.List;
 public class Marriage extends JavaPlugin
 {
     private PlayerManager playerManager;
-    private CommandListener commandListener;
     private PlayerListener playerListener;
     private CommandHandler commandHandler;
     private HerochatListener herochatListener;
@@ -71,7 +70,6 @@ public class Marriage extends JavaPlugin
         this.playerManager = new PlayerManager();
         this.playerListener = new PlayerListener();
         this.herochatListener = new HerochatListener();
-        this.commandListener = new CommandListener();
         this.commandHandler = new CommandHandler();
         setupEconomy();
         registerListeners();
@@ -105,10 +103,13 @@ public class Marriage extends JavaPlugin
     	return this.playerManager;
     }
 
-    @SuppressWarnings("deprecation")
+
     public Player getPlayer(String player)
     {
-        return this.getServer().getPlayer(player);
+        for (Player p : getOnlinePlayers())
+            if (p.getName().equalsIgnoreCase(player))
+                return p;
+        return null;
     }
     
     public List<Player> getOnlinePlayers()
@@ -139,9 +140,6 @@ public class Marriage extends JavaPlugin
 
     private void registerCommands()
     {
-        this.getCommand("marry").setExecutor(this.commandListener);
-        this.getCommand("admmarry").setExecutor(this.commandListener);
-        this.getCommand("partner").setExecutor(this.commandListener);
         this.commandHandler.registerCommands(CommandMarry.class);
         this.commandHandler.registerCommands(CommandAdmMarry.class);
         this.commandHandler.registerCommands(CommandPartner.class);

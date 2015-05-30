@@ -231,9 +231,10 @@ public class PlayerManager
      * Edit player data
      */
 
-    public void resetPlayer(String name) //TODO what about the partner?
+    public void resetPlayer(String name)
     {
     	name = name.toLowerCase();
+        divorcePlayer(getPartner(name));
     	if (playerData.containsKey(name))
     	{
     		database.deletePlayer(name);
