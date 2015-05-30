@@ -91,15 +91,15 @@ public class Messages
             return timeFormat;
     }
 
-    public static List<String> sortMapByValue(Map<String, Integer> map)
+    public static List sortMapByValue(Map<Object, Integer> map)
     {
-        List<String> sortedList = new ArrayList<String>();
+        List<Object> sortedList = new ArrayList<Object>();
         int lastCost = -1;
         int currentCost = Integer.MAX_VALUE;
-        String objToAdd = "";
+        Object objToAdd = "";
         while (sortedList.size() != map.size())
         {
-            for (String helpLine : map.keySet())
+            for (Object helpLine : map.keySet())
                 if (!sortedList.contains(helpLine) && currentCost >= map.get(helpLine) && lastCost <= map.get(helpLine))
                 {
                     objToAdd = helpLine;
@@ -121,7 +121,7 @@ public class Messages
         if (sender instanceof Player)
             sender.sendMessage(ChatColor.translateAlternateColorCodes('&', message));
         else
-            Marriage.plugin.getServer().getLogger().info(message.replaceAll("&[0-9a-fA-Fk-oK-O]", ""));
+            Marriage.plugin.getServer().getLogger().info(message.replaceAll("&[0-9a-fA-Fk-oK-OrR]", ""));
     }
 
     public static void sendMessage(String sender, String message)

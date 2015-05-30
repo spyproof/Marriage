@@ -33,6 +33,7 @@ public class DatabaseHandler {
     private String insertPlayerServerString = "";
     private String updatePlayerString = "";
     private String updatePlayerServerString = "";
+    private String updatePlayerEveryServerString = "";
     private String deletePlayerString = "";
     private String deletePlayerServerString = "";
     private Connection connection;
@@ -66,11 +67,12 @@ public class DatabaseHandler {
     	this.selectPlayerDataString = "SELECT "+table+".name, gender, status, partner, trusts_partner, home_set, home_world, home_x, home_y, home_z, home_pitch, home_yaw, last_seen, balance FROM "+table+","+serversTable+" WHERE "+table+".name = ? AND "+serversTable+".server = ? GROUP BY "+table+".name";
     	this.selectPlayerServerString = "SELECT * FROM "+serversTable+" WHERE name = ? AND server = ?";
     	this.insertPlayerString = "INSERT INTO "+table+" SET name = ?, gender = ?, status = ?, partner = ?, trusts_partner = ?";
-    	this.insertPlayerServerString = "INSERT INTO "+serversTable+" SET name = ?, server = ?, home_set = ?, home_world = ?, home_x = ?, home_y = ?, home_z = ?, home_pitch = ?, home_yaw = ?, last_seen = ?, balance = ?";
-    	this.updatePlayerString = "UPDATE "+table+" SET gender = ?, status = ?, partner = ?, trusts_partner = ? WHERE name = ?";
-    	this.updatePlayerServerString = "UPDATE "+serversTable+" SET home_set = ?, home_world = ?, home_x = ?, home_y = ?, home_z = ?, home_pitch = ?, home_yaw = ?, last_seen = ?, balance = ? WHERE name = ? AND server = ?";
-    	this.deletePlayerString = "DELETE FROM "+table+" WHERE name = ?";
-    	this.deletePlayerServerString = "DELETE FROM "+serversTable+" WHERE name = ? AND server = ?";
+        this.insertPlayerServerString = "INSERT INTO "+serversTable+" SET name = ?, server = ?, home_set = ?, home_world = ?, home_x = ?, home_y = ?, home_z = ?, home_pitch = ?, home_yaw = ?, last_seen = ?, balance = ?";
+        this.updatePlayerString = "UPDATE "+table+" SET gender = ?, status = ?, partner = ?, trusts_partner = ? WHERE name = ?";
+        this.updatePlayerServerString = "UPDATE "+serversTable+" SET home_set = ?, home_world = ?, home_x = ?, home_y = ?, home_z = ?, home_pitch = ?, home_yaw = ?, last_seen = ?, balance = ? WHERE name = ? AND server = ?";
+        this.updatePlayerEveryServerString = "UPDATE "+serversTable+" SET home_set = ?, home_world = ?, home_x = ?, home_y = ?, home_z = ?, home_pitch = ?, home_yaw = ?, balance = ? WHERE name = ?";
+        this.deletePlayerString = "DELETE FROM "+table+" WHERE name = ?";
+    	this.deletePlayerServerString = "DELETE FROM "+serversTable+" WHERE name = ?";
     	
 		try {
             connection = DriverManager.getConnection(connectionString, user, password);
@@ -117,6 +119,7 @@ public class DatabaseHandler {
 
 	public void savePlayer(PlayerData player)
 	{
+		Messages.sendDebugInfo("DBDebug: saving " + player.getName());
 		PlayerData p = getPlayer(player.getName());
 		if (p != null) {
 			updatePlayer(player);
@@ -128,16 +131,19 @@ public class DatabaseHandler {
 	
 	public void deletePlayer(String name)
 	{
+        Messages.sendDebugInfo("DBDebug: Deleting " + name);
 		executeQuery(deletePlayerString, new Object[]{name.toLowerCase()});
-		executeQuery(deletePlayerServerString, new Object[]{ name.toLowerCase(), this.serverName });
+		executeQuery(deletePlayerServerString, new Object[]{ name.toLowerCase()});
 	}
 	
 	public void insertPlayer(PlayerData player)
 	{
+        Messages.sendDebugInfo("DBDebug: inserting as a new player");
 		ResultSet data = executeQuery(selectPlayerString, new Object[]{player.getName().toLowerCase()});
 		try {
 			if (data != null && !data.next())
 			{
+                Messages.sendDebugInfo("DBDebug: was already registered globaly");
 				Object[] temp = {
 						player.getName().toLowerCase(), 
 						player.getGender().toString(), 
@@ -148,6 +154,7 @@ public class DatabaseHandler {
 			}
 			else
 			{
+                Messages.sendDebugInfo("DBDebug: was not registered globaly");
 				player.setGender(Gender.fromString(data.getString("gender")));
 				player.setStatus(Status.fromString(data.getString("status")));
 				player.setPartner(data.getString("partner"));
@@ -168,18 +175,18 @@ public class DatabaseHandler {
 
 		try {
 			if (data == null || !data.next())
-			{
+			{//"INSERT INTO "+serversTable+" SET name = ?, server = ?, home_set = ?, home_world = ?, home_x = ?, home_y = ?, home_z = ?, home_pitch = ?, home_yaw = ?, last_seen = ?, balance = ?";
 
+                Messages.sendDebugInfo("DBDebug: is new to this server");
 				Object[] temp2 = {
-						player.getName().toLowerCase(),
-						this.serverName,
+                        player.getName().toLowerCase(),
+                        this.serverName,
 						player.isHomeSet(),
                         player.getHomeLoc().getWorld() == null ? "world" : player.getHomeLoc().getWorld().getName(),
 						player.getHomeLoc().getBlockX(),
 						player.getHomeLoc().getBlockY(),
 						player.getHomeLoc().getBlockZ(),
-						player.getHomeLoc().getPitch(),
-						player.getHomeLoc().getYaw(),
+						player.getHomeLoc().getPitch(), player.getHomeLoc().getYaw(),
 						player.getLastSeen(),
 						player.getBalance()};
 				executeQuery(insertPlayerServerString, temp2);
@@ -199,6 +206,7 @@ public class DatabaseHandler {
 	
 	public void updatePlayer(PlayerData player)
 	{
+        Messages.sendDebugInfo("DBDebug: updating an existing player");
 		Object[] temp = { 
 				player.getGender().toString(), 
 				player.getStatus().toString(),
@@ -207,28 +215,91 @@ public class DatabaseHandler {
 				player.getName().toLowerCase()};
 		executeQuery(updatePlayerString, temp);
 
-		Object[] temp2 = {
-				player.isHomeSet(),
-                player.getHomeLoc().getWorld() == null ? "world" : player.getHomeLoc().getWorld().getName(),
-				player.getHomeLoc().getBlockX(),
-				player.getHomeLoc().getBlockY(),
-				player.getHomeLoc().getBlockZ(),
-				player.getHomeLoc().getPitch(),
-				player.getHomeLoc().getYaw(),
-				player.getLastSeen(),
-				player.getBalance(),
-				player.getName().toLowerCase(),
-				this.serverName};
-		executeQuery(updatePlayerServerString, temp2);
+        Object[] selectServer = {
+                player.getName().toLowerCase(),
+                this.serverName
+        };
+
+        boolean doServerInsert = false;
+        ResultSet data = executeQuery(selectPlayerServerString, selectServer);
+        try {
+            if (data == null || !data.next()) {
+                doServerInsert = true;
+            }
+        } catch (SQLException e) {
+            doServerInsert = true;
+            e.printStackTrace();
+        }finally
+        {
+            try
+            {
+                data.close();
+            } catch (SQLException e)
+            {
+                e.printStackTrace();
+            }
+        }
+
+        if (doServerInsert) {
+            Messages.sendDebugInfo("DBDebug: is new to this server");
+            Object[] temp2 = {
+                    player.getName().toLowerCase(),
+                    this.serverName,
+                    player.isHomeSet(),
+                    player.getHomeLoc().getWorld() == null ? "world" : player.getHomeLoc().getWorld().getName(),
+                    player.getHomeLoc().getBlockX(),
+                    player.getHomeLoc().getBlockY(),
+                    player.getHomeLoc().getBlockZ(),
+                    player.getHomeLoc().getPitch(), player.getHomeLoc().getYaw(),
+                    player.getLastSeen(),
+                    player.getBalance()};
+            executeQuery(insertPlayerServerString, temp2);
+        }else{
+            Object[] temp2 = {
+                    player.isHomeSet(),
+                    player.getHomeLoc().getWorld() == null ? "world" : player.getHomeLoc().getWorld().getName(),
+                    player.getHomeLoc().getBlockX(),
+                    player.getHomeLoc().getBlockY(),
+                    player.getHomeLoc().getBlockZ(),
+                    player.getHomeLoc().getPitch(),
+                    player.getHomeLoc().getYaw(),
+                    player.getLastSeen(),
+                    player.getBalance(),
+                    player.getName().toLowerCase(),
+                    this.serverName};
+            executeQuery(updatePlayerServerString, temp2);
+        }
 	}
+
+	public void divorcePlayer(PlayerData player)
+    {
+        PlayerData playerReset = new PlayerData(player.getName(), player.getGender(), Status.DIVORCED, "", false, false, null, System.currentTimeMillis(), 0D);
+        Object[] o = new Object[]{
+                playerReset.isHomeSet(),
+                playerReset.getHomeLoc().getWorld().getName(),
+                playerReset.getHomeLoc().getBlockX(),
+                playerReset.getHomeLoc().getBlockY(),
+                playerReset.getHomeLoc().getBlockZ(),
+                playerReset.getHomeLoc().getPitch(),
+                playerReset.getHomeLoc().getYaw(),
+                playerReset.getBalance(),
+                playerReset.getName()
+        };
+        executeQuery(updatePlayerEveryServerString, o);
+
+        o[o.length-1] = player.getPartner();
+        executeQuery(updatePlayerEveryServerString, o);
+    }
 	
 	public PlayerData getPlayer(String name)
 	{
+        Messages.sendDebugInfo("DBDebug: getting player info of " +name);
 		Object[] temp = {name.toLowerCase(), this.serverName};
 		ResultSet data = executeQuery(selectPlayerDataString, temp);
 		try {
 			if (data != null && data.next())
 			{
+                Messages.sendDebugInfo("DBDebug: player found");
 				return new PlayerData(
 						data.getString("name"), 
 						Gender.fromString(data.getString("gender")), 
@@ -263,6 +334,7 @@ public class DatabaseHandler {
 	{
 		try {
 			PreparedStatement prepStatement = connection.prepareStatement(query);
+            Messages.sendDebugInfo(query);
 			for (int i = 0; i < args.length; i++)
 			{
 				if (args[i] instanceof String)

@@ -1,8 +1,10 @@
 package be.spyproof.marriage.handlers;
 
 import be.spyproof.marriage.Marriage;
+import be.spyproof.marriage.exceptions.PermissionException;
+import net.milkbowl.vault.permission.Permission;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
+import org.bukkit.plugin.RegisteredServiceProvider;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -12,6 +14,9 @@ import java.util.Map;
  */
 public class Permissions
 {
+    /**
+     * Permissions
+     */
     public static final String adminReload = "marriage.admin.reload";
     public static final String adminSave = "marriage.admin.save";
     public static final String adminRemove = "marriage.admin.remove";
@@ -29,18 +34,11 @@ public class Permissions
     public static final String partnerInfo = "marriage.player.partner.info";
     public static final String partnerSeen = "marriage.player.partner.seen";
     public static final String partnerChat = "marriage.player.partner.chat";
+    public static final String partnerChest = "marriage.player.partner.chest";
     public static final String partnerTp = "marriage.player.partner.tp";
     public static final String partnerHome = "marriage.player.partner.home";
     public static final String partnerInventory = "marriage.player.partner.inventory";
     public static final String partnerMoney = "marriage.player.partner.money";
-
-    public static final String unlockCommandSeen = "unlock.command.seen";
-    public static final String unlockCommandInfo = "unlock.command.info";
-    public static final String unlockCommandChat = "unlock.command.chat";
-    public static final String unlockCommandTp = "unlock.command.tp";
-    public static final String unlockCommandHome = "unlock.command.home";
-    public static final String unlockCommandChest = "unlock.command.chest";
-    public static final String unlockCommandInv = "unlock.command.inventory";
 
     public static final String perkPrefix = "marriage.player.perk.prefix";
     public static final String perkLoginMessage  = "marriage.player.perk.login-message";
@@ -48,49 +46,75 @@ public class Permissions
     public static final String perkNoSmite = "marriage.player.perk.no-smite-on-partner-dead";
     public static final String perkHearts = "marriage.player.perk.hearts";
 
-    public static final String unlockPerkPrefix = "unlock.perk.prefix";
-    public static final String unlockPerkLoginMessage  = "unlock.perk.login-message";
-    public static final String unlockPerkTeleportEffect = "unlock.perk.teleport-effects";
-    public static final String unlockPerkNoSmite = "unlock.perk.no-smite-on-partner-dead";
-    public static final String unlockPerkHearts = "unlock.perk.hearts";
-
     public static final String bypassCooldown = "marriage.bypass.cooldowns";
     public static final String bypassMarriageCosts = "marriage.bypass.marriagecosts";
     public static final String bypassCommandCosts = "marriage.bypass.commandcosts";
 
-    //Check for player permission
-    public static boolean hasPerm(CommandSender sender, String perm) //TODO handle -i.am.a.perm
+    private static Map<String, Integer> unlockCosts = new HashMap<String, Integer>(); //Permission + unlockCost
+    private static Permission permission = null;
+
+    public Permissions()
     {
-        if (sender.hasPermission(perm) || perm.equalsIgnoreCase("none") || sender.isOp())
+        setupPermissions();
+        unlockCosts.put(partnerChat, Marriage.config.getInt("unlock.command.chat"));
+        unlockCosts.put(partnerChest, Marriage.config.getInt("unlock.command.chest"));
+        unlockCosts.put(partnerHome, Marriage.config.getInt("unlock.command.home"));
+        unlockCosts.put(partnerInfo, Marriage.config.getInt("unlock.command.info"));
+        unlockCosts.put(partnerInventory, Marriage.config.getInt("unlock.command.inventory"));
+        unlockCosts.put(partnerSeen, Marriage.config.getInt("unlock.command.seen"));
+        unlockCosts.put(partnerTp, Marriage.config.getInt("unlock.command.yp"));
+        unlockCosts.put(perkHearts, Marriage.config.getInt("unlock.perk.hearts"));
+        unlockCosts.put(perkLoginMessage, Marriage.config.getInt("unlock.perk.login-message"));
+        unlockCosts.put(perkNoSmite, Marriage.config.getInt("unlock.perk.no-smite-on-partner-dead"));
+        unlockCosts.put(perkPrefix, Marriage.config.getInt("unlock.perk.prefix"));
+        unlockCosts.put(perkTeleportEffect, Marriage.config.getInt("unlock.perk.teleport-effects"));
+    }
+
+    public static boolean hasPerm(CommandSender sender, String perm) throws PermissionException
+    {
+        if (sender.isOp() || perm.equalsIgnoreCase("none"))
             return true;
+
+        boolean hasMoney = hasMoney(sender, perm);
+        boolean hasPerm = permission.has(sender, perm);
+        int money = 0;
+        if (unlockCosts.containsKey(perm))
+            money = unlockCosts.get(perm);
+
+        if (!hasMoney || !hasPerm)
+            throw new PermissionException(hasPerm, hasMoney, money);
+
+        return true;
+    }
+
+    private static boolean hasMoney(CommandSender sender, String perm)
+    {
+        //Check if player bypasses the cost
+        if (permission.has(sender, Permissions.bypassCommandCosts))
+            return true;
+
+        //Check if you need money for this permission
+        if (!unlockCosts.containsKey(perm))
+            return true;
+
+        //Check if player has the money
+        return Marriage.plugin.getPlayerManager().getBalance(sender.getName()) >= unlockCosts.get(perm);
+    }
+
+    public static int unlockCost(String perm)
+    {
+        if (unlockCosts.containsKey(perm))
+            return unlockCosts.get(perm);
         else
-        {
-            boolean go = perm.contains(".");
-            while (go)
-            {
-                perm = perm.replaceAll("\\.\\*$", "");
-                perm = perm.replaceAll("\\.\\w*$", ".*");
-                if (!perm.contains("."))
-                    go = false;
-                if (sender.hasPermission(perm) && go)
-                    return true;
-            }
-            return false;
+            return 0;
+    }
+
+    private boolean setupPermissions()
+    {
+        RegisteredServiceProvider<Permission> permissionProvider = Marriage.plugin.getServer().getServicesManager().getRegistration(net.milkbowl.vault.permission.Permission.class);
+        if (permissionProvider != null) {
+            permission = permissionProvider.getProvider();
         }
-    }
-
-    public static boolean hasMoney(CommandSender sender, String money)
-    {
-        return hasMoney(sender, Marriage.config.getInt(money));
-    }
-
-    public static boolean hasMoney(CommandSender sender, int money)
-    {
-        if (Permissions.hasPerm(sender, Permissions.bypassCommandCosts))
-            return true;
-        boolean hasMoney = Marriage.plugin.getPlayerManager().getBalance(sender.getName()) >= money;
-        if (!hasMoney)
-            Messages.sendDebugInfo("&cNot have enough money");
-        return hasMoney;
+        return (permission != null);
     }
 }

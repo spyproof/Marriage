@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Random;
 
 import be.spyproof.marriage.Marriage;
+import be.spyproof.marriage.exceptions.PermissionException;
 import be.spyproof.marriage.handlers.Messages;
 import be.spyproof.marriage.handlers.Permissions;
 import be.spyproof.marriage.Status;
@@ -36,16 +37,18 @@ public class PlayerListener implements Listener
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent e)
     {
-    	Marriage.plugin.getPlayerManager().addPlayer(e.getPlayer().getName());
+        Marriage.plugin.getPlayerManager().addPlayer(e.getPlayer().getName());
         if (Marriage.plugin.getPlayerManager().getStatus(e.getPlayer().getName()).equals(Status.MARRIED_TO_PERSON))
         {
-            if (Permissions.hasMoney(e.getPlayer(), Permissions.unlockPerkLoginMessage))
+            try
             {
+                Permissions.hasPerm(e.getPlayer(), Permissions.perkLoginMessage);
                 Player partner = Marriage.plugin.getPlayer(Marriage.plugin.getPlayerManager().getPartner(e.getPlayer().getName()));
 
                 if (partner != null)
                     Messages.sendMessage(partner, Messages.partnerJoined.replace("{player}", e.getPlayer().getDisplayName()));
-            }
+            } catch (PermissionException ignored)
+            {}
         }
     }
 
@@ -61,32 +64,6 @@ public class PlayerListener implements Listener
         if (e.isCancelled())
             return;
         playerDisconnected(e.getPlayer());
-    }
-
-    @EventHandler
-    public void onHeroChat(ChannelChatEvent e)
-    {
-        //Handle the prefix
-        if (!Permissions.hasMoney(e.getSender().getPlayer(), Permissions.unlockPerkPrefix))
-        {
-            e.setFormat(e.getFormat().replace("{marry}", ""));
-            return;
-        }
-
-        Status status = Marriage.plugin.getPlayerManager().getStatus(e.getSender().getName());
-        String prefix = null;
-
-        if (status.equals(Status.MARRIED_TO_PERSON))
-            prefix = "&r" + Messages.prefixMarried + " &r";
-        else if (status.equals(Status.MARRIED_TO_LEFT_HAND))
-            prefix = "&r" + Messages.prefixLeftHand + " &r";
-        else if (status.equals(Status.MARRIED_TO_RIGHT_HAND))
-            prefix = "&r" + Messages.prefixRightHand + " &r";
-
-        if (prefix == null)
-            prefix = "";
-
-        e.setFormat(e.getFormat().replace("{marry}", prefix));
     }
 
 	@EventHandler
@@ -127,7 +104,9 @@ public class PlayerListener implements Listener
                 Marriage.plugin.getPlayerManager().setPartnerChat(e.getPlayer().getName(), false);
             }else
             {
-                if (!Permissions.hasMoney(e.getPlayer(), Permissions.unlockCommandChat))
+                try {
+                    Permissions.hasPerm(e.getPlayer(), Permissions.partnerChat);
+                } catch (PermissionException e1)
                 {
                     Marriage.plugin.getPlayerManager().setPartnerChat(e.getPlayer().getName(), false);
                     Messages.sendMessage(e.getPlayer(), "&cReturning back to normal chat");
@@ -159,8 +138,14 @@ public class PlayerListener implements Listener
                 //If essentials is not enabled, check for my own permission
                 List<Player> players = Marriage.plugin.getOnlinePlayers();
                 for (Player p : players)
-                    if (Permissions.hasPerm(p, Permissions.adminSocialSpy))
-                    	Messages.sendMessage(p, message);
+                {
+                    try {
+                        Permissions.hasPerm(p, Permissions.adminSocialSpy);
+                        Messages.sendMessage(p, message);
+                    } catch (PermissionException e1) {
+                        e1.printStackTrace();
+                    }
+                }
             }
         }
     }
@@ -175,8 +160,11 @@ public class PlayerListener implements Listener
                 String partnerName = Marriage.plugin.getPlayerManager().getPartner(e.getEntity().getName());
                 Player p = Marriage.plugin.getPlayer(partnerName);
 
-                if (Permissions.hasMoney(e.getEntity(), Permissions.unlockPerkNoSmite))
+                try {
+                    Permissions.hasPerm(e.getEntity(), Permissions.perkNoSmite);
+                } catch (PermissionException e1) {
                     return;
+                }
 
                 if (p == null){
                     return;

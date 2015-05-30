@@ -1,12 +1,16 @@
 package be.spyproof.marriage.datamanager;
 
 import be.spyproof.marriage.Gender;
+import be.spyproof.marriage.Marriage;
 import be.spyproof.marriage.Status;
 
+import be.spyproof.marriage.handlers.Messages;
+import com.sun.xml.internal.ws.addressing.v200408.MemberSubmissionWsaServerTube;
 import org.bukkit.Location;
+import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -26,9 +30,7 @@ public class PlayerManager
     public void addPlayer(String name)
     {    	
     	name = name.toLowerCase();
-        if (playerData.containsKey(name))
-            return;
-    	
+        Messages.sendDebugInfo(name + " joined");
     	PlayerData player = database.getPlayer(name);
     	if (player != null)
     	{
@@ -38,7 +40,7 @@ public class PlayerManager
     	{
     		player = new PlayerData(name, Gender.HIDDEN, Status.SINGLE, "", false, false, null, System.currentTimeMillis(), 0.0);
             playerData.put(name, player);
-    		database.insertPlayer(player);
+    		database.savePlayer(player);
     	}
     }
 
@@ -57,6 +59,12 @@ public class PlayerManager
     	if (playerData.containsKey(name))
     	{
     		database.savePlayer(playerData.get(name));
+            if (playerData.get(name).getStatus().equals(Status.MARRIED_TO_PERSON))
+                if (playerData.containsKey(playerData.get(name).getPartner()))
+                {
+                    String partner = playerData.get(name).getPartner();
+                    database.savePlayer(playerData.get(partner));
+                }
     	}
     }
 
@@ -91,9 +99,12 @@ public class PlayerManager
     public void reload()
     {
         //reload(playerData.keySet().toArray(new String[playerData.size()]));
-        String[] names = new String[playerData.size()];
-        for (int i = 0; i < playerData.size(); i++)
-            names[i] = (String) playerData.keySet().toArray()[i];
+        List<Player> players = Marriage.plugin.getOnlinePlayers();
+        String[] names = new String[players.size()];
+
+        for (int i = 0; i < names.length; i++)
+            names[i] = players.get(i).getName();
+
         reload(names);
     }
 
@@ -229,6 +240,42 @@ public class PlayerManager
             playerData.remove(name);
             addPlayer(name);
     	}
+    }
+
+    @SuppressWarnings("deprecation")
+    public void divorcePlayer(String name)
+    {
+        PlayerData p1 = getPlayerData(name);
+        PlayerData p2 = getPlayerData(p1.getPartner());
+
+        database.divorcePlayer(p1);
+
+        if (p1.getStatus().equals(Status.MARRIED_TO_PERSON))
+        {
+            double balance = p1.getBalance();
+            Marriage.eco.depositPlayer(name, balance / 2);
+            Marriage.eco.depositPlayer(p2.getName(), balance / 2);
+            p1.setBalance(0D);
+            p2.setBalance(0D);
+
+            CooldownManager.cooldownManager.setCooldown(name, "divorce");
+            CooldownManager.cooldownManager.setCooldown(p2.getName(), "divorce");
+
+            p2.setStatus(Status.DIVORCED);
+            p2.setPartner("");
+            p2.setIsSharedInvOpen(false);
+            removeHome(p2.getName());
+            p2.setPartnerChat(false);
+        }
+
+        p1.setStatus(Status.DIVORCED);
+        p1.setPartner("");
+        p1.setIsSharedInvOpen(false);
+        removeHome(name);
+        p1.setPartnerChat(false);
+
+        updatePlayerData(p1);
+        updatePlayerData(p2);
     }
 
     public void setGender(String name, Gender gender)

@@ -1,6 +1,7 @@
 package be.spyproof.marriage.datamanager;
 
 import be.spyproof.marriage.Marriage;
+import be.spyproof.marriage.exceptions.PermissionException;
 import be.spyproof.marriage.handlers.Permissions;
 import org.bukkit.command.CommandSender;
 
@@ -35,8 +36,10 @@ public class CooldownManager
 
     public int getCooldown(CommandSender sender, String cat)
     {
-        if (Permissions.hasPerm(sender, Permissions.bypassCooldown))
+        try {
+            Permissions.hasPerm(sender, Permissions.bypassCooldown);
             return 0;
+        } catch (PermissionException e) {}
 
         for (int i = 0; i < this.playerNames.size(); i++)
         {
@@ -46,14 +49,15 @@ public class CooldownManager
                 return timeRemaining/1000;
             }
         }
-
         return 0;
     }
 
     public void setCooldown(CommandSender sender, String cat)
     {
-        if (Permissions.hasPerm(sender, Permissions.bypassCooldown))
+        try {
+            Permissions.hasPerm(sender, Permissions.bypassCooldown);
             return;
+        } catch (PermissionException ignored) {}
 
         int currentCooldown = getCooldown(sender, cat);
 

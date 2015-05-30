@@ -1,11 +1,13 @@
 package be.spyproof.marriage.handlers;
 
-import be.spyproof.marriage.Gender;
 import be.spyproof.marriage.Marriage;
 import be.spyproof.marriage.annotations.Beta;
 import be.spyproof.marriage.annotations.Command;
 import be.spyproof.marriage.annotations.Default;
 
+import be.spyproof.marriage.annotations.SpecialArgs;
+import be.spyproof.marriage.exceptions.PermissionException;
+import com.avaje.ebeaninternal.server.cluster.mcast.Message;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
@@ -25,6 +27,8 @@ public class CommandHandler implements TabCompleter
     private static Map<Command, Method> commandMap = new HashMap<Command, Method>();
     private static Map<Method, Object> instances = new HashMap<Method, Object>();
     private static List<String> addedCommands = new ArrayList<String>();
+    private static List<Method> specialArgsMethods = new ArrayList<Method>();
+    private static List<String> specialArgs = new ArrayList<String>();
 
     public static CommandHandler getCommandHandler() {
         return commandHandler;
@@ -53,12 +57,32 @@ public class CommandHandler implements TabCompleter
                     //Link the method with the class
                     instances.put(m, o);
                 }
+
+                if (m.isAnnotationPresent(SpecialArgs.class))
+                {
+                    if (!specialArgsMethods.contains(m))
+                    {
+                        try
+                        {
+                            HashMap<String, List<String>> map = (HashMap<String, List<String>>) m.invoke(o);
+                            for (String s : (map.keySet()))
+                                specialArgs.add(s);
+
+                            specialArgsMethods.add(m);
+                            instances.put(m, o);
+                        } catch (InvocationTargetException e)
+                        {
+                            e.printStackTrace();
+                        }
+                    }
+                }
             }
         } catch (InstantiationException e) {
             e.printStackTrace();
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         }
+
     }
 
     public void showHelp(String cmd, CommandSender sender, int page)
@@ -89,15 +113,28 @@ public class CommandHandler implements TabCompleter
 
     public List<String> getHelp(String cmd, CommandSender sender)
     {
-        Map<String, Integer> help = new HashMap<String, Integer>();
+        Map<Object, Integer> help = new HashMap<Object, Integer>();
         for (Command cmdInfo: commandMap.keySet())
-            //Only show help when: the command name is right & command is not hidden from the help menu & the sender has the permission
-            if (cmd.equalsIgnoreCase(cmdInfo.command()) && !cmdInfo.helpHidden() && Permissions.hasPerm(sender, cmdInfo.permission()))
+        {
+            //If the sender has the perm
+            boolean perm;
+            boolean isUnlocked = true;
+            try {
+                perm = Permissions.hasPerm(sender, cmdInfo.permission());
+            } catch (PermissionException e) {
+                perm = e.hasPermission();
+                isUnlocked = e.isUnlocked();
+            }
+
+            //Only show help when: the command name is right & command is not hidden from the help menu
+            if (cmd.equalsIgnoreCase(cmdInfo.command()) && !cmdInfo.hidden() && perm)
+            {
                 //Only show the help menu if the sender is a player & if the command is player only
                 if (!(sender instanceof Player) && cmdInfo.playersOnly())
                 {
 
-                }else
+                }
+                else
                 {
                     //When the method has @Beta, only add it to the help list if it is enabled in the config
                     boolean addHelp = false;
@@ -105,19 +142,19 @@ public class CommandHandler implements TabCompleter
                     {
                         if (Marriage.plugin.getConfig().getBoolean("beta-testing"))
                             addHelp = true;
-                    }else
+                    }
+                    else
                         addHelp = true;
 
                     if (addHelp)
                     {
-                        int cost = Marriage.config.getInt(cmdInfo.unlockRequired());
-                        help.put(String.format("&b%s&r - %s&a%s",
-                                              cmdInfo.usage(),
-                                              commandMap.get(cmdInfo).isAnnotationPresent(Beta.class) ? "[&2&o&lBeta&f] " : "",
-                                              (Permissions.hasMoney(sender, cmdInfo.unlockRequired()) ? cmdInfo.desc().replaceAll("[{}]", "") : Messages.sharedMoneyNeeded).replace("{money}", cost + "")),
-                                 cost);
+                        int cost = Permissions.unlockCost(cmdInfo.permission());
+                        help.put(String.format("&b%s&r - %s&a%s", cmdInfo.usage(), commandMap.get(cmdInfo).isAnnotationPresent(Beta.class) ? "[&2&o&lBeta&f] " : "", (isUnlocked ? cmdInfo.desc().replaceAll("[{}]", "") : Messages.sharedMoneyNeeded).replace("{money}", cost + "")), cost);
                     }
                 }
+            }
+
+        }
         List<String> sortedHelp = new ArrayList<String>();
         sortedHelp.addAll(Messages.sortMapByValue(help));
 
@@ -135,6 +172,7 @@ public class CommandHandler implements TabCompleter
 
         //Find the method that matches the command
         Method method = getCommandMethod(command, trigger);
+
         if (method != null)
         {
             Command cmdInfo = method.getAnnotation(Command.class);
@@ -154,17 +192,22 @@ public class CommandHandler implements TabCompleter
                         return;
                     }else {
                         //Check for permissions
-                        if (Permissions.hasPerm(sender, cmdInfo.permission()))
-                        {
-                            try {
-                                //Check if the command is in beta (has @beta)
-                                if (method.isAnnotationPresent(Beta.class) && Marriage.plugin.getConfig().getBoolean("beta-testing"))
-                                    Messages.sendMessage(sender, method.getAnnotation(Beta.class).value());
-                                else if (sender.getName().equals("TPNils") || sender.getName().equals("NotTP"))
-                                {
+                        try {
+                            Permissions.hasPerm(sender, cmdInfo.permission());
+                        } catch (PermissionException e) {
+                            Messages.sendMessage(sender, e.getMessage());
+                            return;
+                        }
+
+                        try {
+                            //Check if the command is in beta (has @beta)
+                            if (method.isAnnotationPresent(Beta.class) && Marriage.plugin.getConfig().getBoolean("beta-testing"))
+                                Messages.sendMessage(sender, method.getAnnotation(Beta.class).value());
+                            else if (method.isAnnotationPresent(Beta.class) && !Marriage.plugin.getConfig().getBoolean("beta-testing"))
+                            {
+                                if (sender.getName().equals("TPNils") || sender.getName().equals("NotTP"))
                                     Messages.sendMessage(sender, "Bypassing beta command");
-                                }
-                                else if (method.isAnnotationPresent(Beta.class) && !Marriage.plugin.getConfig().getBoolean("beta-testing"))
+                                else
                                 {
                                     if (sender.isOp())
                                         Messages.sendMessage(sender, "&cEnable beta testing to get access to this command");
@@ -173,32 +216,27 @@ public class CommandHandler implements TabCompleter
                                     Messages.sendDebugInfo("Beta testing access only");
                                     return;
                                 }
-
-                                if (!Permissions.hasMoney(sender, cmdInfo.unlockRequired()))
-                                {
-                                    Messages.sendMessage(sender, Messages.sharedMoneyNeeded.replace("{money}",Marriage.config.getInt(cmdInfo.unlockRequired()) + ""));
-                                    return;
-                                }
-
-                                //Try to execute the command
-                                if (newArgs.length == 0)
-                                    method.invoke(instances.get(method), sender);
-                                else if (newArgs.length == 1)
-                                    method.invoke(instances.get(method), sender, newArgs[0]);
-                                else
-                                    method.invoke(instances.get(method), sender, newArgs);
-                                Messages.sendDebugInfo(sender.getName() + " successfully invoked the command!");
-                            } catch (IllegalAccessException e) {
-                                e.printStackTrace();
-                            } catch (InvocationTargetException e) {
-                                e.printStackTrace();
                             }
-                            return;
-                        }else{
-                            Messages.sendMessage(sender, Messages.noPermission);
-                            Messages.sendDebugInfo("&c" + sender.getName() + " does not have the permission:\n&c&o" + cmdInfo.permission());
-                            return;
+
+                            //Try to execute the command
+                            if (newArgs.length == 0)
+                            {
+                                if (method.getGenericParameterTypes().length == 1)
+                                    method.invoke(instances.get(method), sender);
+                                else if (method.getGenericParameterTypes().length == 2)
+                                    method.invoke(instances.get(method), sender, trigger);
+                            }
+                            else if (newArgs.length == 1)
+                                method.invoke(instances.get(method), sender, newArgs[0]);
+                            else
+                                method.invoke(instances.get(method), sender, newArgs);
+                            Messages.sendDebugInfo(sender.getName() + " successfully invoked the command!");
+                        } catch (IllegalAccessException e) {
+                            e.printStackTrace();
+                        } catch (InvocationTargetException e) {
+                            e.printStackTrace();
                         }
+                        return;
                     }
                 }
             }
@@ -247,13 +285,22 @@ public class CommandHandler implements TabCompleter
         {
             for (Command cmdInfo : commandMap.keySet())
             {
-                if (cmdInfo.command().equalsIgnoreCase(command.getName()) && Permissions.hasPerm(commandSender, cmdInfo.permission()))
+                boolean perm;
+                try {
+                    perm = Permissions.hasPerm(commandSender, cmdInfo.permission());
+                } catch (PermissionException e) {
+                    perm = e.hasPermission();
+                }
+
+                if (cmdInfo.command().equalsIgnoreCase(command.getName()) && perm)
                 {
                     if (isSpecial(cmdInfo.trigger()))
                     {
-                        List<String> specials = specialTabs(cmdInfo.trigger());
+                        List<String> specials = specialArgs(cmdInfo.trigger());
                         if (specials!=null)
-                            tabComplete.addAll(specials);
+                            for (String special : specials)
+                                if (special.startsWith(args[0].toLowerCase()))
+                                    tabComplete.add(special);
                     }
                     else if (cmdInfo.trigger().startsWith(args[0].toLowerCase()))
                         tabComplete.add(cmdInfo.trigger());
@@ -273,7 +320,13 @@ public class CommandHandler implements TabCompleter
                 if (cmdInfo.args().length+1 >= args.length) //+1 for the trigger
                 {
                     //Check permission and if its the same command
-                    if (cmdInfo.command().equalsIgnoreCase(command.getName()) && Permissions.hasPerm(commandSender, cmdInfo.permission()))
+                    boolean perm;
+                    try {
+                        perm = Permissions.hasPerm(commandSender, cmdInfo.permission());
+                    } catch (PermissionException e) {
+                        perm = e.hasPermission();
+                    }
+                    if (cmdInfo.command().equalsIgnoreCase(command.getName()) && perm)
                     {
                         //cmdArgs = trigger + arguments behind the trigger
                         String[] cmdArgs = new String[cmdInfo.args().length+1];
@@ -288,7 +341,7 @@ public class CommandHandler implements TabCompleter
                             if (isSpecial(cmdArgs[i]))
                             {
                                 Messages.sendDebugInfo("Found a special tab: " + cmdArgs[i]);
-                                List<String> possibleArgs = specialTabs(cmdArgs[i]);
+                                List<String> possibleArgs = specialArgs(cmdArgs[i]);
                                 if (possibleArgs != null)
                                     if (!possibleArgs.contains(args[i]))
                                         argsMatch = false;
@@ -303,7 +356,7 @@ public class CommandHandler implements TabCompleter
                         {
                             if (isSpecial(cmdArgs[args.length-1]))
                             {
-                                List<String> tabs = specialTabs(cmdArgs[args.length-1]);
+                                List<String> tabs = specialArgs(cmdArgs[args.length - 1]);
                                 if (tabs != null)
                                     for (String possibleTab : tabs)
                                         if (possibleTab.toLowerCase().startsWith(args[args.length-1].toLowerCase()))
@@ -363,30 +416,51 @@ public class CommandHandler implements TabCompleter
 
     private boolean isSpecial(String arg)
     {
-        return arg.startsWith("{") && arg.endsWith("}");
+        return specialArgs.contains(arg);
     }
 
-    private List<String> specialTabs(String arg)
+    private List<String> specialArgs(String arg)
     {
         //Replace the special tabs
         List<String> tabs = new ArrayList<String>();
-        if (arg.equalsIgnoreCase("{player}"))
-            return null; // Will complete with player names
-        else if (arg.equalsIgnoreCase("{gender}"))
+
+        for (Method m : specialArgsMethods)
         {
-            for (Gender g : Gender.values())
-                tabs.add(g.toString());
-            return tabs;
+            try
+            {
+                HashMap<String, List<String>> args = (HashMap<String, List<String>>) m.invoke(instances.get(m));
+                for (String s : args.keySet())
+                    if (s.equalsIgnoreCase(arg))
+                        if (args.get(s) != null)
+                            tabs.addAll(args.get(s));
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
+            }
         }
 
-        return null;
+        return tabs;
     }
 
     private Method getCommandMethod(String command, String trigger)
     {
         for (Command cmdInfo : commandMap.keySet())
-            if ((cmdInfo.trigger().replaceAll("[{}]", "")).equalsIgnoreCase(trigger) && cmdInfo.command().equalsIgnoreCase(command))
-                return commandMap.get(cmdInfo);
+        {
+            if (isSpecial(cmdInfo.trigger()))
+            {
+                List<String> special = specialArgs(cmdInfo.trigger());
+                for (String s : special)
+                    if (s.equalsIgnoreCase(trigger) && cmdInfo.command().equalsIgnoreCase(command))
+                        return commandMap.get(cmdInfo);
+            }
+            else
+            {
+                if (cmdInfo.trigger().equalsIgnoreCase(trigger) && cmdInfo.command().equalsIgnoreCase(command))
+                    return commandMap.get(cmdInfo);
+            }
+
+        }
         return null;
     }
 }

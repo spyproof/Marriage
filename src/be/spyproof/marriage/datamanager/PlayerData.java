@@ -76,13 +76,15 @@ public class PlayerData
         this.trustsPartner = trustsPartner;
         this.homeSet = homeSet;
         this.partnerChat = false;
-        this.location = location;
+        if (location == null)
+            this.location = new Location(Marriage.plugin.getServer().getWorld("world"), 0, 0, 0, 0F, 0F);
+        else
+            this.location = location;
         this.lastSeen = lastSeen;
         this.balance = balance;
         this.isSharedInvOpen = false;
 
-        if (this.location == null)
-            this.location = new Location(Marriage.plugin.getServer().getWorld("world"), 0, 0, 0, 0F, 0F);
+
     }
 
     /**
@@ -160,7 +162,7 @@ public class PlayerData
 
     public void setPartner(String partner)
     {
-        this.partner = partner;
+        this.partner = partner.toLowerCase();
     }
 
     public void setIsSharedInvOpen(boolean trustsPartner)

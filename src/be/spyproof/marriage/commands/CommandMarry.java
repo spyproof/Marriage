@@ -3,8 +3,10 @@ package be.spyproof.marriage.commands;
 import be.spyproof.marriage.*;
 import be.spyproof.marriage.annotations.Command;
 import be.spyproof.marriage.annotations.Default;
+import be.spyproof.marriage.annotations.SpecialArgs;
 import be.spyproof.marriage.datamanager.CooldownManager;
 import be.spyproof.marriage.datamanager.PlayerManager;
+import be.spyproof.marriage.exceptions.PermissionException;
 import be.spyproof.marriage.handlers.Messages;
 import be.spyproof.marriage.handlers.Permissions;
 import org.bukkit.Bukkit;
@@ -18,6 +20,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -41,7 +44,7 @@ public class CommandMarry
     }
 
     @Command(command = "marry", trigger = "deny", args = {}, playersOnly = true, permission = Permissions.playerMarryOther, desc = "Deny the marriage request", usage = "/marry deny")
-    public void DenyMarriage(CommandSender sender)
+    public void denyMarriage(CommandSender sender)
     {
         try{
             Player sadPlayer = Marriage.plugin.getPlayer(this.offers.get(sender.getName().toLowerCase())); //sadPartner = player who did /marry <player>
@@ -58,7 +61,7 @@ public class CommandMarry
     }
 
     @Command(command = "marry", trigger = "accept", args = {}, playersOnly = true, permission = Permissions.playerMarryOther, desc = "Accept the marriage request", usage = "/marry accept")
-    public void AcceptMarriage(final Player sender)
+    public void acceptMarriage(final Player sender)
     {
         if (playerManager.isMarried(sender.getName()))
         {
@@ -100,8 +103,10 @@ public class CommandMarry
 
         CooldownManager.cooldownManager.setCooldown(sender.getName(), "request");
 
-        if (!Permissions.hasPerm(partner, Permissions.bypassMarriageCosts))
-        {
+        //Check if player has enough money
+        try {
+            Permissions.hasPerm(partner, Permissions.bypassMarriageCosts);
+        } catch (PermissionException e) {
             if (Marriage.eco.has(partner, this.cost))
             {
                 Marriage.eco.withdrawPlayer(partner, this.cost);
@@ -156,8 +161,8 @@ public class CommandMarry
         }
     }
 
-    @Command(command = "marry", trigger = "{left}", args = {}, playersOnly = true, permission = Permissions.playerMarrySelf, helpHidden = true)
-    public void MarryLeftHand(CommandSender sender)
+    @Command(command = "marry", trigger = "left", args = {}, playersOnly = true, permission = Permissions.playerMarrySelf, hidden = true)
+    public void marryLeftHand(CommandSender sender)
     {
         if (playerManager.isMarried(sender.getName()))
         {
@@ -165,14 +170,20 @@ public class CommandMarry
             return;
         }
 
+        //Check for cooldown
         int cooldownRequest = CooldownManager.cooldownManager.getCooldown(sender, "request");
         int cooldownDivorce = CooldownManager.cooldownManager.getCooldown(sender, "divorce");
         int cooldown = cooldownDivorce > cooldownRequest ? cooldownDivorce : cooldownRequest;
 
-        if (cooldown > 0 && !Permissions.hasPerm(sender, Permissions.bypassCooldown))
+        try {
+            Permissions.hasPerm(sender, Permissions.bypassCooldown);
+        } catch (PermissionException e)
         {
-            Messages.sendMessage(sender, Messages.onCooldown.replace("{time}", Messages.timeformat(cooldown)));
-            return;
+            if (cooldown > 0 && !e.hasPermission())
+            {
+                Messages.sendMessage(sender, Messages.onCooldown.replace("{time}", Messages.timeformat(cooldown)));
+                return;
+            }
         }
 
         playerManager.setStatus(sender.getName(), Status.MARRIED_TO_LEFT_HAND);
@@ -182,8 +193,8 @@ public class CommandMarry
         Bukkit.broadcastMessage(ChatColor.translateAlternateColorCodes('&', broadcast));
     }
 
-    @Command(command = "marry", trigger = "{right}", args = {}, playersOnly = true, permission = Permissions.playerMarrySelf, helpHidden = true)
-    public void MarryRightHand(CommandSender sender)
+    @Command(command = "marry", trigger = "right", args = {}, playersOnly = true, permission = Permissions.playerMarrySelf, hidden = true)
+    public void marryRightHand(CommandSender sender)
     {
         if (playerManager.isMarried(sender.getName()))
         {
@@ -210,7 +221,7 @@ public class CommandMarry
     }
 
     //TODO add money to desc somehow
-    @Command(command = "marry", trigger = "player", args = {"{player}"}, playersOnly = true, permission = Permissions.playerMarryOther, desc = "Marry a player", usage = "/marry player <name>")
+    @Command(command = "marry", trigger = "{onlinePlayer}", args = {}, playersOnly = true, permission = Permissions.playerMarryOther, desc = "Marry a player", usage = "/marry <name>")
     public void sendMarriageRequestPlayer(Player sender, String receiverName)
     {
         Player receiver = Marriage.plugin.getPlayer(receiverName);
@@ -260,9 +271,13 @@ public class CommandMarry
             return;
         }
 
-        if (!Permissions.hasPerm(sender, Permissions.bypassMarriageCosts))
+        //Check if player has money
+        try
         {
-            if (!Marriage.eco.has(sender, this.cost))
+            Permissions.hasPerm(sender, Permissions.bypassMarriageCosts);
+        } catch (PermissionException e)
+        {
+            if (!Marriage.eco.has(sender, this.cost) && !e.hasPermission())
             {
                 Messages.sendMessage(sender, Messages.notEnoughMoney);
                 return;
@@ -342,37 +357,52 @@ public class CommandMarry
         }
     }
 
-    @SuppressWarnings("deprecation")
+    /**
+     * @return Map<specialTab, listOfPossibilities>
+     */
+    @SpecialArgs
+    public Map<String, List<String>> getGlobalArgs()
+    {
+        Map<String, List<String>> possibleArgs = new HashMap<String, List<String>>();
+
+        List<String> tabs = new ArrayList<String>();
+        possibleArgs.put("{player}", null);
+
+        for (Player p : Marriage.plugin.getOnlinePlayers())
+            tabs.add(p.getName());
+        possibleArgs.put("{onlinePlayer}", tabs);
+
+        return possibleArgs;
+    }
+
+    /**
+     * @return Map<specialTab, listOfPossibilities>
+     */
+    @SpecialArgs
+    public Map<String, List<String>> getLocalArgs()
+    {
+        Map<String, List<String>> possibleArgs = new HashMap<String, List<String>>();
+
+        List<String> tabs = new ArrayList<String>();
+
+        for (Gender g : Gender.values())
+            tabs.add(g.toString());
+        possibleArgs.put("{gender}", tabs);
+
+        return possibleArgs;
+    }
+
     public static boolean divorcePlayer(String player) throws IllegalArgumentException
     {
         player = player.toLowerCase();
         String partner = Marriage.plugin.getPlayerManager().getPartner(player);
 
-        if (Marriage.plugin.getPlayerManager().getStatus(player).equals(Status.MARRIED_TO_PERSON))
-        {
-            double balance = Marriage.plugin.getPlayerManager().getBalance(player);
-            Marriage.eco.depositPlayer(player, balance/2);
-            Marriage.eco.depositPlayer(partner, balance/2);
-            Marriage.plugin.getPlayerManager().setBalance(player, 0D);
-            Marriage.plugin.getPlayerManager().setBalance(partner, 0D);
+        Marriage.plugin.getPlayerManager().divorcePlayer(player);
 
-            CooldownManager.cooldownManager.setCooldown(player, "divorce");
-            CooldownManager.cooldownManager.setCooldown(partner, "divorce");
-
-        	Marriage.plugin.getPlayerManager().addPlayer(partner);
-            Marriage.plugin.getPlayerManager().setStatus(partner, Status.DIVORCED);
-            Marriage.plugin.getPlayerManager().setPartner(partner, "");
-            Marriage.plugin.getPlayerManager().setIsSharedInvOpen(partner, false);
-            Marriage.plugin.getPlayerManager().removeHome(partner);
-            Marriage.plugin.getPlayerManager().setPartnerChat(partner, false);
+        if (Marriage.plugin.getPlayerManager().getStatus(player).equals(Status.MARRIED_TO_PERSON)) {
             Messages.sendMessage(partner, Messages.divorce);
         }
 
-        Marriage.plugin.getPlayerManager().setStatus(player, Status.DIVORCED);
-        Marriage.plugin.getPlayerManager().setPartner(player, "");
-        Marriage.plugin.getPlayerManager().setIsSharedInvOpen(player, false);
-        Marriage.plugin.getPlayerManager().removeHome(player);
-        Marriage.plugin.getPlayerManager().setPartnerChat(player, false);
         Messages.sendMessage(player, Messages.divorce);
 
         return true;

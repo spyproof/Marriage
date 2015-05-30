@@ -6,17 +6,15 @@ import be.spyproof.marriage.annotations.Command;
 import be.spyproof.marriage.annotations.Default;
 import be.spyproof.marriage.datamanager.PlayerManager;
 
+import be.spyproof.marriage.exceptions.PermissionException;
 import be.spyproof.marriage.handlers.CommandHandler;
 import be.spyproof.marriage.handlers.Messages;
 import be.spyproof.marriage.handlers.Permissions;
 import com.earth2me.essentials.Essentials;
-import com.sk89q.worldedit.Vector;
 import com.sk89q.worldguard.LocalPlayer;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
-import com.sk89q.worldguard.protection.flags.BooleanFlag;
 import com.sk89q.worldguard.protection.flags.DefaultFlag;
-import com.sk89q.worldguard.protection.flags.StateFlag;
 import de.slikey.effectlib.effect.AnimatedBallEffect;
 import de.slikey.effectlib.util.ParticleEffect;
 import org.bukkit.Bukkit;
@@ -47,7 +45,7 @@ public class CommandPartner
     	this.playerManager = Marriage.plugin.getPlayerManager();
     }
 
-    @Command(command = "partner", trigger = "info", args = {}, playersOnly = true, permission = Permissions.partnerInfo, desc = "Check on your partner", usage = "/partner info", unlockRequired = Permissions.unlockCommandInfo)
+    @Command(command = "partner", trigger = "info", args = {}, playersOnly = true, permission = Permissions.partnerInfo, desc = "Check on your partner", usage = "/partner info")
     public void getPartnerName(CommandSender sender)
     {
         Status status = playerManager.getStatus(sender.getName());
@@ -74,7 +72,7 @@ public class CommandPartner
             Messages.sendMessage(sender, Messages.notMarried);
     }
 
-    @Command(command = "partner", trigger = "seen", args = {}, playersOnly = true, permission = Permissions.partnerSeen, desc = "Last time your partner was online", usage = "/partner seen", unlockRequired = Permissions.unlockCommandSeen)
+    @Command(command = "partner", trigger = "seen", args = {}, playersOnly = true, permission = Permissions.partnerSeen, desc = "Last time your partner was online", usage = "/partner seen")
     public void lastSeenPartner(CommandSender sender)
     {
         if (!playerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))
@@ -97,7 +95,7 @@ public class CommandPartner
         }
     }
 
-    @Command(command = "partner", trigger = "chat", args = {}, playersOnly = true, permission = Permissions.partnerChat, desc = "Chat privately with your partner", usage = "/partner chat", unlockRequired = Permissions.unlockCommandChat)
+    @Command(command = "partner", trigger = "chat", args = {}, playersOnly = true, permission = Permissions.partnerChat, desc = "Chat privately with your partner", usage = "/partner chat")
     public void chat(CommandSender sender)
     {
         if (!playerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))
@@ -123,7 +121,7 @@ public class CommandPartner
         }
     }
 
-    @Command(command = "partner", trigger = "tp", args = {}, playersOnly = true, permission = Permissions.partnerTp, desc = "Teleport to your partner", usage = "/partner tp", unlockRequired = Permissions.unlockCommandTp)
+    @Command(command = "partner", trigger = "tp", args = {}, playersOnly = true, permission = Permissions.partnerTp, desc = "Teleport to your partner", usage = "/partner tp")
     public void teleportToPartner(final Player sender)
     {
         if (!playerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))
@@ -144,7 +142,7 @@ public class CommandPartner
         teleport(sender, partner);
     }
 
-    @Command(command = "partner", trigger = "sethome", args = {}, playersOnly = true, permission = Permissions.partnerHome, desc = "Set the home location", usage = "/partner sethome", unlockRequired = Permissions.unlockCommandHome)
+    @Command(command = "partner", trigger = "sethome", args = {}, playersOnly = true, permission = Permissions.partnerHome, desc = "Set the home location", usage = "/partner sethome")
     public void setHome(Player sender)
     {
         if (!playerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))
@@ -162,7 +160,7 @@ public class CommandPartner
 
     }
 
-    @Command(command = "partner", trigger = "home", args = {}, playersOnly = true, permission = Permissions.partnerHome, desc = "Go to your home location", usage = "/partner home", unlockRequired = Permissions.unlockCommandHome)
+    @Command(command = "partner", trigger = "home", args = {}, playersOnly = true, permission = Permissions.partnerHome, desc = "Go to your home location", usage = "/partner home")
     public void goHome(Player sender)
     {
         if (!playerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))
@@ -182,7 +180,7 @@ public class CommandPartner
     }
 
     @Beta
-    @Command(command = "partner", trigger = "chest", args = {}, playersOnly = true, permission = Permissions.partnerInventory, desc = "Open a shared inventory", usage = "/partner chest", unlockRequired = Permissions.unlockCommandChest)
+    @Command(command = "partner", trigger = "chest", args = {}, playersOnly = true, permission = Permissions.partnerChest, desc = "Open a shared inventory", usage = "/partner chest")
     public void openChest(Player sender)
     {
         if (!playerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))
@@ -288,7 +286,7 @@ public class CommandPartner
         Messages.sendMessage(sender, "&eCurrent balance: $" + sharedBalance);
     }
 
-    @Command(command = "partner", trigger = "perks", args = {}, playersOnly = true, permission = Permissions.partnerMoney, desc = "Passive perks to unlock", usage = "/partner perks")
+    @Command(command = "partner", trigger = "perks", args = {}, playersOnly = true, desc = "Passive perks to unlock", usage = "/partner perks")
     public void passivePerks(Player sender)
     {
         if (!playerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))
@@ -297,52 +295,68 @@ public class CommandPartner
             return;
         }
 
-        Map<String, Integer> perks = new HashMap<String, Integer>(); //TODO permissions
-        if (Marriage.config.getBoolean("smite-on-partner-dead"))
-            perks.put(ChatColor.YELLOW + "Don't get smited when your partner dies", Marriage.config.getInt(Permissions.unlockPerkNoSmite));
+        Map<String, String> perks = new HashMap<String, String>();
 
-        perks.put(ChatColor.YELLOW + "Chat prefix", Marriage.config.getInt(Permissions.unlockPerkPrefix));
         if (Marriage.plugin.isPluginEnabled(Messages.effectsLibPluginName))
         {
-            perks.put(ChatColor.YELLOW + "Heart effects when walking near each other", Marriage.config.getInt(Permissions.unlockPerkHearts));
-            perks.put(ChatColor.YELLOW + "Cool teleporting effect", Marriage.config.getInt(Permissions.unlockPerkTeleportEffect));
+            perks.put(ChatColor.YELLOW + "Heart effects when walking near each other", Permissions.perkHearts);
+            perks.put(ChatColor.YELLOW + "Cool teleporting effect", Permissions.perkTeleportEffect);
         }
-        perks.put(ChatColor.YELLOW + "Receive a notification when your partner logs in", Marriage.config.getInt(Permissions.unlockPerkLoginMessage));
+
+        if (Marriage.plugin.isPluginEnabled(Messages.heroChatPluginName))
+            perks.put(ChatColor.YELLOW + "Chat prefix", Permissions.perkPrefix);
+
+        perks.put(ChatColor.YELLOW + "Don't get smited when your partner dies", Permissions.perkNoSmite);
+        perks.put(ChatColor.YELLOW + "Receive a notification when your partner logs in", Permissions.perkLoginMessage);
 
         int invSize = perks.size()/9;
         if (perks.size()%9 != 0)
             invSize = invSize+9;
 
-        List<String> sortedPerks = Messages.sortMapByValue(perks);
         Inventory inv = Bukkit.createInventory(null, invSize, Messages.perkInvName);
-        for (int i = 0; i < sortedPerks.size(); i++)
+        Map<Object, Integer> items = new HashMap<Object, Integer>();
+        //for (int i = 0; i < sortedPerks.size(); i++)
+        for (String perk : perks.keySet())
         {
             ItemStack item = new ItemStack(Material.WOOL);
             ItemMeta meta = item.getItemMeta();
             List<String> lore = new ArrayList<String>();
 
-            if (Permissions.hasMoney(sender, perks.get(sortedPerks.get(i))))
+            boolean hasPerm = true;
+            boolean isUnlocked = true;
+            try {
+                Permissions.hasPerm(sender, perks.get(perk));
+            } catch (PermissionException e) {
+                hasPerm = e.hasPermission();
+                isUnlocked = e.isUnlocked();
+            }
+
+            if (isUnlocked)
             {
-                lore.add(ChatColor.GREEN + "Unlocked ($" + perks.get(sortedPerks.get(i)) + ")");
+                lore.add(ChatColor.GREEN + "Unlocked ($" + Permissions.unlockCost(perks.get(perk)) + ")");
                 item.setDurability((short) 5);
             }else{
-                lore.add(ChatColor.RED + "Shared balance required: $" + perks.get(sortedPerks.get(i)));
+                lore.add(ChatColor.RED + "Shared balance required: $" + Permissions.unlockCost(perks.get(perk)));
                 item.setDurability((short) 14);
             }
 
             lore.add(ChatColor.GOLD + "Current balance: $" + Marriage.plugin.getPlayerManager().getBalance(sender.getName()));
             meta.setLore(lore);
-            meta.setDisplayName(sortedPerks.get(i));
+            meta.setDisplayName(perk);
             item.setItemMeta(meta);
 
-            inv.addItem(item);
+            if (hasPerm)
+                items.put(item, Permissions.unlockCost(perks.get(perk)));
         }
+
+        for (Object item : Messages.sortMapByValue(items))
+            inv.addItem((ItemStack) item);
 
         sender.openInventory(inv);
     }
 
     @Default("1")
-    @Command(command = "partner", trigger = "help", args = {"{int}"}, playersOnly = true, helpHidden = true)
+    @Command(command = "partner", trigger = "help", args = {"{int}"}, playersOnly = true, hidden = true)
     public void help(CommandSender sender, String page)
     {
         if (!playerManager.getStatus(sender.getName()).equals(Status.MARRIED_TO_PERSON))
@@ -378,7 +392,7 @@ public class CommandPartner
             Messages.sendMessage(sender, "&c"+e.getMessage());
             return;
         }
-        if (Marriage.plugin.isPluginEnabled(Messages.effectsLibPluginName) && Permissions.hasMoney(sender, Permissions.unlockCommandTp))
+        if (Marriage.plugin.isPluginEnabled(Messages.effectsLibPluginName))
         {
             final String receiverName = receiver.getName();
             Messages.sendMessage(sender, "&ePrepairing to teleport!");
@@ -417,7 +431,7 @@ public class CommandPartner
             Messages.sendMessage(sender, "&c"+e.getMessage());
             return;
         }
-        if (Marriage.plugin.isPluginEnabled(Messages.effectsLibPluginName) && Permissions.hasMoney(sender, Permissions.unlockCommandTp))
+        if (Marriage.plugin.isPluginEnabled(Messages.effectsLibPluginName))
         {
             Messages.sendMessage(sender, "&ePrepairing to teleport!");
 

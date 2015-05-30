@@ -32,6 +32,7 @@ public class Marriage extends JavaPlugin
     private CommandListener commandListener;
     private PlayerListener playerListener;
     private CommandHandler commandHandler;
+    private HerochatListener herochatListener;
 
     public static Marriage plugin;
     public static Economy eco;
@@ -42,20 +43,16 @@ public class Marriage extends JavaPlugin
 
     /**
      * TODO Random ideas
-     *  - Better handling for special tabs
      *  - Family tree (implement family stuff)
      *  - Shared bank hooked into the economy
      *  - give exp to partner
      *  - give item
+     *  - firework on marriage
      *
      *  - Shared donator perks
      *    - heal
      *    - feed
      *    - Give vote tokens
-     *
-     *
-     * TODO Important
-     *  - on divorce, reset data on all servers
      */
 
     /**
@@ -73,11 +70,13 @@ public class Marriage extends JavaPlugin
         new CooldownManager();
         this.playerManager = new PlayerManager();
         this.playerListener = new PlayerListener();
+        this.herochatListener = new HerochatListener();
         this.commandListener = new CommandListener();
         this.commandHandler = new CommandHandler();
         setupEconomy();
         registerListeners();
         registerCommands();
+        setupEffectsLib();
 
         for (Player p : getOnlinePlayers())
             playerManager.addPlayer(p.getName());
@@ -114,7 +113,7 @@ public class Marriage extends JavaPlugin
     
     public List<Player> getOnlinePlayers()
     {
-    	List<World> worlds = plugin.getServer().getWorlds();
+    	List<World> worlds = this.getServer().getWorlds();
     	List<Player> players = new ArrayList<Player>();
     	for (World w : worlds)
     		for (Player p : w.getPlayers())
@@ -135,6 +134,7 @@ public class Marriage extends JavaPlugin
     private void registerListeners()
     {
         this.getServer().getPluginManager().registerEvents(this.playerListener, this);
+        this.getServer().getPluginManager().registerEvents(this.herochatListener, this);
     }
 
     private void registerCommands()
@@ -162,7 +162,7 @@ public class Marriage extends JavaPlugin
         if (!isPluginEnabled(Messages.effectsLibPluginName))
             return;
 
-        this.lib = new EffectLib();
+        this.lib = EffectLib.instance();
         this.effectManager = new EffectManager(lib);
     }
 }

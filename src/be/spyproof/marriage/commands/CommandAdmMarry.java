@@ -13,7 +13,6 @@ import be.spyproof.marriage.annotations.Default;
 import com.earth2me.essentials.Essentials;
 
 import de.slikey.effectlib.Effect;
-import de.slikey.effectlib.EffectLib;
 import de.slikey.effectlib.EffectManager;
 import de.slikey.effectlib.effect.*;
 import de.slikey.effectlib.util.ParticleEffect;
@@ -105,7 +104,7 @@ public class CommandAdmMarry
         }
     }
 
-    @Command(command = "admmarry", trigger = "{debug}", args = {}, playersOnly = false, helpHidden = true)
+    @Command(command = "admmarry", trigger = "debug", args = {}, playersOnly = false, hidden = true)
     public void getDebug(CommandSender sender)
     {
         //When enabled, show the player debug information
@@ -154,7 +153,7 @@ public class CommandAdmMarry
 
     @Beta
     @Default({"17", "19", "1"})
-    @Command(command = "admmarry", trigger = "effect", args = {"{int}", "{int}", "{int}"}, helpHidden = true, playersOnly = true)
+    @Command(command = "admmarry", trigger = "effect", args = {"{int}", "{int}", "{int}"}, hidden = true, playersOnly = true)
     public void effects(Player sender, String[] args)
     {
         if (!sender.isOp())
